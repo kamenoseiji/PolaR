@@ -1,4 +1,5 @@
-source('date.R')
+library(devtools)
+source_url('https://raw.github.com/kamenoseiji/PolaR/master/date.R')
 
 #-------- Constants
 ARYMAX <- 32	# アレイ数の最大値
