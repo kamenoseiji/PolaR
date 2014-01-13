@@ -2,17 +2,17 @@
 # usage: Rscript ScanPattern.R [prefix]
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
-library(devtools)
+library(downloader)
 SAM45LOG_dir <- "/Volumes/SSD/PolariS/SAM45/"
 #Rscript_dir  <- "/Volumes/SSD/PolariS/R/"
 #source(paste(Rscript_dir, "readPolariS.R", sep=""))
 #source(paste(Rscript_dir, "readSAM45.R", sep=""))
 #source(paste(Rscript_dir, "Qeff4bit.R", sep=""))
 #source(paste(Rscript_dir, "findSAM45Log.R", sep=""))
-source_url('https://raw.github.com/kamenoseiji/PolaR/master/readPolariS.R')
-source_url('https://raw.github.com/kamenoseiji/PolaR/master/readSAM45.R')
-source_url('https://raw.github.com/kamenoseiji/PolaR/master/Qeff4bit.R')
-source_url('https://raw.github.com/kamenoseiji/PolaR/master/findSAM45Log.R')
+source_url('https://raw.github.com/kamenoseiji/PolaR/master/readPolariS.R', prompt=F, quiet=T)
+source_url('https://raw.github.com/kamenoseiji/PolaR/master/readSAM45.R', prompt=F, quiet=T)
+source_url('https://raw.github.com/kamenoseiji/PolaR/master/Qeff4bit.R', prompt=F, quiet=T)
+source_url('https://raw.github.com/kamenoseiji/PolaR/master/findSAM45Log.R', prompt=F, quiet=T)
 #
 args <- commandArgs()
 prefix <- args[6]
