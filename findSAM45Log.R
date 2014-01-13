@@ -1,4 +1,5 @@
-source_url("https://raw.github.com/kamenoseiji/PolaR/master/date.R")
+library(downloader)
+source_url("https://raw.github.com/kamenoseiji/PolaR/master/date.R", , prompt=F, quiet=T)
 findSAM45Log <- function(dir, prefix){
 	# dir: directory to search SAM45 logging files
 	# prefix: PolariS file prefix (=YYYYDOYHHMMSS)

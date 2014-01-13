@@ -1,6 +1,5 @@
 library(downloader)
 source_url('https://raw.github.com/kamenoseiji/PolaR/master/date.R', prompt=F, quiet=T)
-
 #-------- Constants
 ARYMAX <- 32	# アレイ数の最大値
 BINMAX <- 4		# ビン分割の最大値
