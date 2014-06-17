@@ -1,4 +1,4 @@
-library(Rcurl)
+library(RCurl)
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
 #-------- Constants
 ARYMAX <- 32	# アレイ数の最大値
