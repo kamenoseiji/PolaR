@@ -76,3 +76,14 @@ ha2azel <-function(ha, phi=34.217019*pi/180, dec=0){
 	pa <- atan2(cos(phi)*sin(ha), sin(phi)*cos(dec) - cos(phi)*sin(dec)* cos(ha))
 	return(data.frame(ha=ha, az=az, el=el, pa=pa))
 }
+
+azel2pa <- function(az, el, lat = 35.94152778){		# NRO45m latitude
+	# azel2pa : Calculate parallactic angle [rad]
+	# az   : azimuth angle [degree], 0, 90, 180, and 270 for north, east, south, and west
+	# el   : elevation angle [degree, 90 for zenith, 0 for horizon
+	# lat  : Latitude of the telescope [degree]. Default is set to NRO45m.
+	#
+	lat <- lat / 180.0;	az <- az/180.0;	el <- el/180.0
+	cos_lat <- cospi(lat)		# cospi() and sinpi() are new features of R 3.1.0. If you use older version, replace with cos(pi* lat)
+	return(atan2( -cos_lat*sinpi(az), (sinpi(lat)* cospi(el) - cos_lat* sinpi(el)* cospi(az))))
+}
