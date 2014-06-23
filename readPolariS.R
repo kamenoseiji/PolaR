@@ -1,5 +1,3 @@
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/delaysearch.R", ssl.verifypeer = FALSE)))
 readPolariS <- function(fname, chnum=131072){
 	head_size <- 128						# 128-byte Header
 	file_size <- file.info(fname)$size		# File size [byte]
