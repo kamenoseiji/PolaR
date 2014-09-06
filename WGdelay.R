@@ -6,14 +6,13 @@
 library(RCurl)
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/mjd.R", ssl.verifypeer = FALSE)))
 setwd('.')
 
 
 #-------- Procedures
-#args <- commandArgs()
-#prefix <- args[6:length(args)]
-prefix <- c('2014107010610', '2014107013610', '2014107020610', '2014107023610', '2014107030610', '2014107033610', '2014107040610', '2014107043610', '2014107050610', '2014107053610', '2014107060610', '2014107063610', '2014107070610', '2014107073610', '2014107080610', '2014107083610', '2014107090610')
-setwd('/Volumes/SSD/PolariS/20140417')
+args <- commandArgs()
+prefix <- args[6:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 BPfname <- sprintf('%s.BP.Rdata', prefix[1])
 
@@ -30,6 +29,7 @@ delayC00 <- numeric(0); delayC01 <- numeric(0); C00Vis <- complex(0); C01Vis <- 
 for(index in 1:length(scanXP$startMJD)){
 	startFileIndex <- findPrefix(scanXP$startMJD[index], prefix)
 	endFileIndex   <- findPrefix(scanXP$endMJD[index], prefix)
+	mjdSec[index] <- mean(c(scanXP$startMJD[index], scanXP$endMJD[index])); tempTime <- mjd2doy(mjdSec[index])
 	for(file_index in startFileIndex:endFileIndex){
 		endPoint   <- min( c(scanXP$endMJD[index] - prefix2MJDsec(prefix[file_index]) + 1, 1800) )
 		if( file_index == startFileIndex){
