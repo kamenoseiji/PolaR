@@ -1,0 +1,54 @@
+# WGdelay.R : Generate delay and phase table using WG scans
+# usage: Rscript WGdelay.R [prefix list]
+# e.g. Rscript WGdelay.R 2014107010610 2014107013610 2014107020610 2014107023610 2014107030610 2014107033610 2014107040610 2014107043610 2014107050610 2014107053610 2014107060610 2014107063610 2014107070610 2014107073610 2014107080610 2014107083610 2014107090610
+ 
+#
+library(RCurl)
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
+setwd('.')
+
+
+#-------- Procedures
+#args <- commandArgs()
+#prefix <- args[6:length(args)]
+prefix <- c('2014107010610', '2014107013610', '2014107020610', '2014107023610', '2014107030610', '2014107033610', '2014107040610', '2014107043610', '2014107050610', '2014107053610', '2014107060610', '2014107063610', '2014107070610', '2014107073610', '2014107080610', '2014107083610', '2014107090610')
+setwd('/Volumes/SSD/PolariS/20140417')
+XPfname <- sprintf('%s.XP.Rdata', prefix[1])
+BPfname <- sprintf('%s.BP.Rdata', prefix[1])
+
+#-------- Load XP, scanXP, and BP tables
+load(XPfname)
+load(BPfname)
+chnum <- GetChNum(sprintf('%s.C.%02dB', prefix[1], 0))
+bunchNum <- length(BP$BP00) / chnum
+BP <- data.frame(BP00 = bunch_vec(BP$BP00, bunchNum), BP01 = bunch_vec(BP$BP01, bunchNum))
+chRange <- floor(chnum*0.05):floor(chnum*0.95)
+
+#-------- Delay determination
+delayC00 <- numeric(0); delayC01 <- numeric(0); C00Vis <- complex(0); C01Vis <- complex(0); mjdSec <- numeric(0)
+for(index in 1:length(scanXP$startMJD)){
+	startFileIndex <- findPrefix(scanXP$startMJD[index], prefix)
+	endFileIndex   <- findPrefix(scanXP$endMJD[index], prefix)
+	for(file_index in startFileIndex:endFileIndex){
+		endPoint   <- min( c(scanXP$endMJD[index] - prefix2MJDsec(prefix[file_index]) + 1, 1800) )
+		if( file_index == startFileIndex){
+			startPoint <- scanXP$startMJD[index] - prefix2MJDsec(prefix[file_index]) + 1
+			C00 <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 0))[,startPoint:endPoint] / BP$BP00
+			C01 <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 1))[,startPoint:endPoint] / BP$BP01
+		} else {
+			startPoint <- 1
+			temp <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 0))[,startPoint:endPoint] / BP$BP00; C00 <- cbind(C00, temp)
+			temp <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 1))[,startPoint:endPoint] / BP$BP01; C01 <- cbind(C00, temp)
+		}
+	}
+	integRange <- which( Mod(apply(C00, 2, mean)) > median(Mod(apply(C00, 2, mean))) )
+	delayC00[index] <- delay_search( apply(C00[chRange,integRange], 1, mean))* chnum/length(chRange)
+	delayC01[index] <- delay_search( apply(C01[chRange,integRange], 1, mean))* chnum/length(chRange)
+	temp00 <- delay_cal(apply(C00[chRange, integRange], 1, mean), delayC00[index])
+	temp01 <- delay_cal(apply(C01[chRange, integRange], 1, mean), delayC01[index])
+	C00Vis[index] <- mean( temp00 ); C01Vis[index] <- mean( temp01 )
+	cat(sprintf('%02d:%02d:%02.0f  %6.4f %6.4f %6.3f    %6.4f %6.4f %6.3f\n', tempTime$hour, tempTime$min, tempTime$sec, delayC00[index], Mod(C00Vis[index]), Arg(C00Vis[index]), delayC01[index], Mod(C01Vis[index]), Arg(C01Vis[index])))
+}
+WG <- data.frame( mjdSec = mjdSec, delay00 = delayC00, delay01 = delayC01, Vis00 = C00Vis, Vis01 = C01Vis)
+save(WG, file=sprintf("%s.WG.Rdata", prefix[1]))

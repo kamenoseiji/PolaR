@@ -1,13 +1,21 @@
 library(RCurl)
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/delaysearch.R", ssl.verifypeer = FALSE)))
 
+#-------- Extract number of channel
+GetChNum <- function(fname){
+	file_ptr <- file(fname, "rb")								# Access to the file
+	header <- readBin(file_ptr, what=integer(), size=4, n=32)	# Read header information
+	close(file_ptr)
+	return(header[16])
+}
+
 #-------- Read PolariS Power Spectrum (A file)
 readPolariS <- function(fname){
+	chnum <- GetChNum(fname)
 	head_size <- 128						# 128-byte Header
 	file_size <- file.info(fname)$size		# File size [byte]
 	file_ptr <- file(fname, "rb")			# Access to the file
 	header <- readBin(file_ptr, what=integer(), size=4, n=32)	# Read header information
-	chnum <- header[16]						# Number of channels in the header
 	ipnum <- (file_size - head_size) / (4* chnum)	# 1 record = sizeof(float) x chnum
 	temparray <- array(readBin(file_ptr, what=numeric(), n=chnum* ipnum, size=4), dim=c(chnum, ipnum))
 	close(file_ptr)
@@ -86,6 +94,15 @@ bunch_vec <- function(vector, bunchNum){	# Function to bunch 1-d vector
 	temp <- matrix( append(vector, rep(vector[length(vector)], pudding)), nrow=bunchNum)
 	return( apply(temp, 2, mean))
 }
+
+#-------- Function to pick prefix that covers specified MJD
+findPrefix <- function(mjdSec, prefix){
+	mjdPrefix <- as.numeric(lapply(prefix, FUN=prefix2MJDsec))
+	index <- which(mjdPrefix <= mjdSec)
+	if( length(index) == 0){	return(-1)}
+	return(max(index))
+}
+
 
 wireGridPhaseCorr <- function(XY, ScanIndex, chRange=9:65544){
 	# XY is the cross power spectrum

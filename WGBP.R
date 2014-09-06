@@ -23,12 +23,12 @@ scanGap <- function( XP, thresh, gapThresh ){
 }
 
 #-------- Function to pick prefix that covers specified MJD
-findPrefix <- function(mjdSec, prefix){
-	mjdPrefix <- as.numeric(lapply(prefix, FUN=prefix2MJDsec))
-	index <- which(mjdPrefix <= mjdSec)
-	if( length(index) == 0){	return(-1)}
-	return(max(index))
-}
+#findPrefix <- function(mjdSec, prefix){
+	#mjdPrefix <- as.numeric(lapply(prefix, FUN=prefix2MJDsec))
+	#index <- which(mjdPrefix <= mjdSec)
+	#if( length(index) == 0){	return(-1)}
+	#return(max(index))
+#}
 
 #-------- Function to Generate BP table
 makeBP <- function(scanXP, prefix){
@@ -49,7 +49,6 @@ prefix <- args[7:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 
 #-------- Load XP and identify WG scans
-cat(XPfname); cat('\n')
 load(XPfname)
 scanXP <- scanGap(XP, thresh, 60 )
 
