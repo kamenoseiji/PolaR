@@ -221,7 +221,7 @@ gauss4bit <- function(bitDist){ return(gaussNbit(bitDist, 16)) }
 
 #-------- Function to estimage power using 256-level histogram
 bitPower <- function(fname){
-	bitDist <- apply(readBitDist(fname, 256), 2, bunchVec16)
+	bitDist <- apply(readBitDist(fname), 2, bunchVec16)
 	gaussResults <- apply(bitDist, 2, gauss4bit)
 	return(1/gaussResults[1,]^2)
 }
