@@ -1,5 +1,5 @@
 # ScanPattern.R
-# usage: Rscript ScanPattern.R [prefix]
+# usage: Rscript ScanPattern.R [SAM45 directory] [prefix]
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
 library(RCurl)
@@ -9,7 +9,9 @@ eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/ma
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/findSAM45Log.R", ssl.verifypeer = FALSE)))
 #
 args <- commandArgs()
-prefix <- args[6]
+SAM45LOG_dir <- args[6]
+prefix <- args[7]
+setwd(SAM45LOG_dir)
 SAM45logFile <- paste(SAM45LOG_dir, findSAM45Log(SAM45LOG_dir, prefix), sep="")
 T_hot <- 290.0			# Hot load temperature [K]
 #
@@ -17,16 +19,13 @@ T_hot <- 290.0			# Hot load temperature [K]
 SAM45Log <- readSAM45(SAM45logFile)
 head1 <- SAM45Log[[1]]; head2 <- SAM45Log[[2]]; SAM45spec <- SAM45Log[[3]]; SAM45df <- SAM45Log[[4]]
 #-------- Read PolariS total power data
-bitDist00 <- readBitDist(paste(prefix, '.P.00', sep=''))
-bitDist01 <- readBitDist(paste(prefix, '.P.01', sep=''))
-bitDist02 <- readBitDist(paste(prefix, '.P.02', sep=''))
-bitDist03 <- readBitDist(paste(prefix, '.P.03', sep=''))
-#
-gaussResults <- apply(bitDist00, 2, gauss4bit); bitPower00 <- 1/gaussResults[1,]^2
-gaussResults <- apply(bitDist01, 2, gauss4bit); bitPower01 <- 1/gaussResults[1,]^2
-gaussResults <- apply(bitDist02, 2, gauss4bit); bitPower02 <- 1/gaussResults[1,]^2
-gaussResults <- apply(bitDist03, 2, gauss4bit); bitPower03 <- 1/gaussResults[1,]^2
-bitPower <- data.frame(IF0=bitPower00, IF1=bitPower01, IF2=bitPower02, IF3=bitPower03)
+bitPowerIF <- list(); IFNum <- 4
+for(IF_index in 1:IFNum){
+	bitDist <- apply(readBitDist( sprintf('%s.P.%02d', prefix, IF_index-1), 256), 2, bunchVec16)
+	gaussResults <- apply(bitDist, 2, gauss4bit)
+	bitPowerIF[[IF_index]] <- 1/gaussResults[1,]^2
+}
+bitPower <- data.frame(IF0=bitPowerIF[[1]], IF1=bitPowerIF[[2]], IF2=bitPowerIF[[3]], IF3=bitPowerIF[[4]])
 #
 #-------- PolariS time tags
 mjdSec <- prefix2MJDsec(prefix) + seq(0, length(gaussResults[1,])-1, by=1)
@@ -40,10 +39,12 @@ for(scanIndex in arrayIndex){
 	if( SAM45df$cscan_type[scanIndex] == 'R' )	RScan <- append(RScan, tail(polaris_index, length(polaris_index)-1))									# Hot load
 }
 #-------- Tsys
-Tsys00 <- T_hot / ( mean(bitPower00[RScan]) / bitPower00 - 1.0); Tsys00[RScan] <- NA
-Tsys01 <- T_hot / ( mean(bitPower01[RScan]) / bitPower01 - 1.0); Tsys01[RScan] <- NA
-Tsys02 <- T_hot / ( mean(bitPower02[RScan]) / bitPower02 - 1.0); Tsys02[RScan] <- NA
-Tsys03 <- T_hot / ( mean(bitPower03[RScan]) / bitPower03 - 1.0); Tsys03[RScan] <- NA
-Tsys <- data.frame(IF0=Tsys00, IF1=Tsys01, IF2=Tsys02, IF3=Tsys03)
+TsysIF <- list()
+for(IF_index in 1:IFNum){ TsysIF[[IF_index]] <- T_hot / ( mean(bitPowerIF[[IF_index]][RScan]) / bitPowerIF[[IF_index]] - 1.0); TsysIF[[IF_index]][RScan] <- NA }
+# Tsys00 <- T_hot / ( mean(bitPower00[RScan]) / bitPower00 - 1.0); Tsys00[RScan] <- NA
+# Tsys01 <- T_hot / ( mean(bitPower01[RScan]) / bitPower01 - 1.0); Tsys01[RScan] <- NA
+# Tsys02 <- T_hot / ( mean(bitPower02[RScan]) / bitPower02 - 1.0); Tsys02[RScan] <- NA
+# Tsys03 <- T_hot / ( mean(bitPower03[RScan]) / bitPower03 - 1.0); Tsys03[RScan] <- NA
+Tsys <- data.frame(IF0=TsysIF[[1]], IF1=TsysIF[[2]], IF2=TsysIF[[3]], IF3=TsysIF[[4]])
 #-------- OutPuts
-save(head1, head2, SAM45df, mjdSec, onScan, offScan, RScan, SAM45spec, bitPower, Tsys, file=paste(prefix, ".scan", sep=""))
+save(head1, head2, SAM45df, mjdSec, onScan, offScan, RScan, SAM45spec, bitPower, Tsys, file=paste(prefix, ".scan.Rdata", sep=""))

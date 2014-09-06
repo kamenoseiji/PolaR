@@ -204,15 +204,19 @@ scanPattern <- function(SAM45File, prefix, IF_ID){
 	return(list(mjdSec=mjdSec, power=powerMonitor, SAM45=SAM45df, on=onScan, off=offScan, R=RScan))
 }
 
+#-------- 
 bunchVec16 <- function(vec){ return(bunch_vec(vec, 16)) }
 
+#-------- 
 T_sys <- function(Thot, Y){ return(Thot/(Y-1)) }
 
+#-------- 
 TsysScan <- function(Scan){
 	Y <- mean(Scan$power[Scan$R]) / mean(Scan$power[Scan$off])
 	return( T_sys(290, Y) )
 }
 
+#-------- 
 gauss4bit <- function(bitDist){ return(gaussNbit(bitDist, 16)) } 
 
 #-------- Function to estimage power using 256-level histogram
