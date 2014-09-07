@@ -52,6 +52,10 @@ for(fileIndex in 1:length(SAM45File)){
 }
 #-------- Tsys
 Scan <- scanTsys(Scan, 290.0)
-save(Scan, file=sprintf("%s.Scan.Rdata", prefix[1]))
+#-------- Save
+StartUTC <- mjd2doy(Scan$mjdSec[1])
+fileName <- sprintf("%04d%03d%02d%02d%02d.Scan.Rdata", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
+save(Scan, file=fileName)
+cat('Saved into '); cat(fileName); cat('\n')
 
 #-------- Plot
