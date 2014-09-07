@@ -3,6 +3,7 @@
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
 library(RCurl)
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readSAM45.R", ssl.verifypeer = FALSE)))
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/mjd.R", ssl.verifypeer = FALSE)))
 setwd('.')
@@ -77,4 +78,4 @@ on_A02 <- integSegment(prefix, 'A', 2, onMJD ); off_A02 <- integSegment(prefix, 
 on_A03 <- integSegment(prefix, 'A', 3, onMJD ); off_A03 <- integSegment(prefix, 'A', 3, offMJD ); R_A03 <- integSegment(prefix, 'A', 3, RMJD )
 
 #-------- Save into file
-save(onMJD, on_C00, on_C01, on_A00, on_A01, on_A02, on_A03, offMJD, off_C00, off_C01, off_A00, off_A01, off_A02, off_A03, RMJD, R_C00, R_C01, R_A00, R_A01, R_A02, R_A03, file='TMC1_SPEC.Rdata')
+save(onMJD, on_C00, on_C01, on_A00, on_A01, on_A02, on_A03, offMJD, off_C00, off_C01, off_A00, off_A01, off_A02, off_A03, RMJD, R_C00, R_C01, R_A00, R_A01, R_A02, R_A03, file=sprintf("%s.SPEC.Rdata", prefix[1]))

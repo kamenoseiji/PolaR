@@ -19,10 +19,13 @@ BPfname <- sprintf('%s.BP.Rdata', prefix[1])
 #-------- Load XP, scanXP, and BP tables
 load(XPfname)
 load(BPfname)
-chnum <- GetChNum(sprintf('%s.C.%02dB', prefix[1], 0))
+postFix <- ''
+if(file.exists(sprintf('%s.C.%02dB', prefix[1], 0))){ postFix <- 'B' }
+chnum <- GetChNum(sprintf('%s.C.%02d%s', prefix[1], 0, postFix))
 bunchNum <- length(BP$BP00) / chnum
 BP <- data.frame(BP00 = bunch_vec(BP$BP00, bunchNum), BP01 = bunch_vec(BP$BP01, bunchNum))
 chRange <- floor(chnum*0.05):floor(chnum*0.95)
+
 
 #-------- Delay determination
 delayC00 <- numeric(0); delayC01 <- numeric(0); C00Vis <- complex(0); C01Vis <- complex(0); mjdSec <- numeric(0)
@@ -34,12 +37,12 @@ for(index in 1:length(scanXP$startMJD)){
 		endPoint   <- min( c(scanXP$endMJD[index] - prefix2MJDsec(prefix[file_index]) + 1, 1800) )
 		if( file_index == startFileIndex){
 			startPoint <- scanXP$startMJD[index] - prefix2MJDsec(prefix[file_index]) + 1
-			C00 <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 0))[,startPoint:endPoint] / BP$BP00
-			C01 <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 1))[,startPoint:endPoint] / BP$BP01
+			C00 <- readPolariS_X(sprintf('%s.C.%02d%s', prefix[file_index], 0, postFix))[,startPoint:endPoint] / BP$BP00
+			C01 <- readPolariS_X(sprintf('%s.C.%02d%s', prefix[file_index], 1, postFix))[,startPoint:endPoint] / BP$BP01
 		} else {
 			startPoint <- 1
-			temp <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 0))[,startPoint:endPoint] / BP$BP00; C00 <- cbind(C00, temp)
-			temp <- readPolariS_X(sprintf('%s.C.%02dB', prefix[file_index], 1))[,startPoint:endPoint] / BP$BP01; C01 <- cbind(C00, temp)
+			temp <- readPolariS_X(sprintf('%s.C.%02d%s', prefix[file_index], 0, postFix))[,startPoint:endPoint] / BP$BP00; C00 <- cbind(C00, temp)
+			temp <- readPolariS_X(sprintf('%s.C.%02d%s', prefix[file_index], 1, postFix))[,startPoint:endPoint] / BP$BP01; C01 <- cbind(C00, temp)
 		}
 	}
 	integRange <- which( Mod(apply(C00, 2, mean)) > median(Mod(apply(C00, 2, mean))) )
