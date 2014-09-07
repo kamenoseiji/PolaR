@@ -53,3 +53,5 @@ for(fileIndex in 1:length(SAM45File)){
 #-------- Tsys
 Scan <- scanTsys(Scan, 290.0)
 save(Scan, file=sprintf("%s.Scan.Rdata", prefix[1]))
+
+#-------- Plot

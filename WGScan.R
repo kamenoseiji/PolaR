@@ -12,7 +12,11 @@ scanXP <- function(prefix){
 	C00 <- numeric(0); mjdSec <- numeric(0)
 	for(index in 1:PolarisFileNum){
 		cat( sprintf("Loading %s ….\n", prefix[index]))
-		temp <- readPolariS_X(sprintf('%s.C.%02dB', prefix[index], 0))
+		if( file.exists(sprintf('%s.C.%02dB', prefix[index], 0)) ){
+			temp <- readPolariS_X(sprintf('%s.C.%02dB', prefix[index], 0))
+		} else {
+			temp <- readPolariS_X(sprintf('%s.C.%02d', prefix[index], 0))
+		}
 		C00 <- append(C00, apply(Mod(apply(temp, 2, fft)), 2, max))
 		mjdSec <- append(mjdSec, (prefix2MJDsec(prefix[index]) + seq(0, dim(temp)[2]-1, by=1)))
 	}
