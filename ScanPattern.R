@@ -9,36 +9,26 @@ eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/ma
 setwd('.')
 #-------- Function to calculate Tsys from Scan Pattern
 scanTsys <- function(Scan, Tamb){
+	nameList <- names(Scan)
 	R_index <- which(Scan$scanType == 'R')
 	index <- which(Scan$scanType == 'OFF' | Scan$scanType == 'ON' | Scan$scanType == 'SKY')
-	power_ptr <- grep('power', names(Scan)); IFnum <- length(power_ptr)
+	power_ptr <- grep('power', nameList); IFnum <- length(power_ptr)
 	for(IF_index in 1:IFnum){
-		Tsys   <- rep(NA, length(Scan$mjdSec))
-		RPower <- predict(smooth.spline(Scan$mjdSec[R_index], Scan[[power_ptr[IF_index]]][R_index], spar=1.0), Scan$mjdSec)$y
-		Tsys[index]  <- Tamb / (RPower / Scan[[power_ptr[IF_index]]][index] - 1.0)
-		Scan <- cbind(Scan, Tsys)
+		 IF_ID <- as.integer(strsplit(nameList[power_ptr[IF_index]], "power")[[1]][2])
+		 Tsys   <- rep(NA, length(Scan$mjdSec))
+		 RPower <- predict(smooth.spline(Scan$mjdSec[R_index], Scan[[power_ptr[IF_index]]][R_index], spar=1.0), Scan$mjdSec)$y
+		 Tsys[index]  <- Tamb / (RPower[index] / Scan[[power_ptr[IF_index]]][index] - 1.0)
+		 Scan <- cbind(Scan, Tsys)
+		 nameList <- append(nameList, sprintf('Tsys%02d', IF_ID))
 	}
+	names(Scan) <- nameList
 	return(Scan)
 }
-		
-	
-	#RPower <- predict(smooth.spline(Scan$mjdSec[R_index], Scan$power[R_index], spar=1.0), Scan$mjdSec)$y
-	
-	
-	#Range <- range( Scan$mjdSec[c(Scan$on, Scan$off, Scan$R)]); mjdRange <- Range[1]:Range[2]
-	#RPower <- predict(smooth.spline(Scan$mjdSec[Scan$R], Scan$power[Scan$R], spar=1.0), mjdRange)$y
-	#offPower <- predict(smooth.spline(Scan$mjdSec[Scan$off], Scan$power[Scan$off], spar=0.8), mjdRange)$y
-	#onPower <- predict(smooth.spline(Scan$mjdSec[Scan$on], Scan$power[Scan$on], spar=0.25), mjdRange)$y
-	#on_Tsys  <- Tamb / (RPower / onPower - 1.0)
-	#off_Tsys <- Tamb / (RPower / offPower - 1.0)
-	#return( data.frame(mjdSec = mjdRange, TsysOn = on_Tsys, TsysOff = off_Tsys))
-#}
 
 #-------- Procedures
-#args <- commandArgs()
+args <- commandArgs()
 prefix <- character(0)
-#SAM45File <- args[6:length(args)]
-SAM45File <- "SAM45.TMC1.np32802.proj5.20140417103636"
+SAM45File <- args[6:length(args)]
 
 #-------- List prefix of PolariS data
 Year <- substr(strsplit(SAM45File[1], '\\.')[[1]][5], 1, 4)
@@ -60,6 +50,6 @@ for(fileIndex in 1:length(SAM45File)){
 	if(fileIndex == 1){	Scan <- tempScan}
 	else { Scan <- rbind(Scan, tempScan)}
 }
-
 #-------- Tsys
 Scan <- scanTsys(Scan, 290.0)
+save(Scan, file=sprintf("%s.Scan.Rdata", prefix[1]))
