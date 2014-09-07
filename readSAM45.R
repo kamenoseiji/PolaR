@@ -180,29 +180,74 @@ readSAM45 <- function(fname){
 
 #-------- Function to find Scan Pattern from SAM45 Log
 scanPattern <- function(SAM45File, prefix, IF_ID){
-	PolarisFileNum <- length(prefix)
 	SAM45Log <- readSAM45(SAM45File)
 	head1 <- SAM45Log[[1]]; head2 <- SAM45Log[[2]]; SAM45spec <- SAM45Log[[3]]; SAM45df <- SAM45Log[[4]]
-	for(index in 1:PolarisFileNum){
-		if(index == 1){
-			powerMonitor <- bitPower(sprintf("%s.P.%02d", prefix[1], IF_ID))
-			mjdSec <- prefix2MJDsec(prefix[1]) + seq(0, length(powerMonitor)-1, by=1)
-		} else {
-			tmpPowerMonitor <- bitPower(sprintf("%s.P.%02d", prefix[index], IF_ID))
-			powerMonitor <- append(powerMonitor, tmpPowerMonitor)
-			mjdSec <- append(mjdSec, (prefix2MJDsec(prefix[index]) + seq(0, length(tmpPowerMonitor)-1, by=1)))
-		}
-	}
-	onScan <- c(); offScan <- c(); RScan <- c();
 	arrayIndex <- which(SAM45df$cary_name == SAM45df$cary_name[1])
-	for(scanIndex in arrayIndex){
-		polaris_index <- which((mjdSec >= (SAM45df$mjd_st[scanIndex]-0.5)) & (mjdSec <= (SAM45df$mjd_ed[scanIndex]-0.5)))
-		if( (SAM45df$dAZ[scanIndex]^2 + SAM45df$dEL[scanIndex]^2 < 1.0) & (SAM45df$cscan_type[scanIndex] == 'ON') )	onScan <- append(onScan, (min(polaris_index)-1):(max(polaris_index)))	# On scan
-		if( SAM45df$cscan_type[scanIndex] == 'OFF')	offScan <- append(offScan, (min(polaris_index)-5):(max(polaris_index)+3))								# Off scan
-		if( SAM45df$cscan_type[scanIndex] == 'R' )	RScan <- append(RScan, tail(polaris_index, length(polaris_index)-2))									# Hot load
+	mjdRange <- min( SAM45df$mjd_st[arrayIndex] ):max( SAM45df$mjd_ed[arrayIndex] )
+	#-------- Scan Type
+	scanLen  <- length(mjdRange)
+	ScanType <- AZ <- EL <- dAZ <- dEL <- Vrad <- rep( NA, scanLen )
+	for(index in arrayIndex){
+		timeIndex <- which( mjdRange >= SAM45df$mjd_st[index] & mjdRange <= SAM45df$mjd_ed[index] )
+		ScanType[timeIndex] <- as.character(SAM45df$cscan_type[index])
+		AZ[timeIndex] <- SAM45df$AZ[index]
+		EL[timeIndex] <- SAM45df$EL[index]
+		dAZ[timeIndex] <- SAM45df$dAZ[index]
+		dEL[timeIndex] <- SAM45df$dEL[index]
+		Vrad[timeIndex] <- SAM45df$Vrad[index]
 	}
-	return(list(mjdSec=mjdSec, power=powerMonitor, SAM45=SAM45df, on=onScan, off=offScan, R=RScan))
+	#-------- Covering PolariS Prefix
+	prefix_index <- c()
+	for(index in arrayIndex){prefix_index <- append(prefix_index, findPrefix(SAM45df$mjd_st[index], prefix))}
+	prefix_index <- unique( prefix_index[prefix_index != -1] )
+	PolarisFileNum <- length(prefix_index)
+	#-------- MJD and Power in PolariS P file
+	mjdSecPolaris <- numeric(0); powerIF <- list()
+	for(IF_index in 1:length(IF_ID)){
+		tempPower <- numeric(0)
+		for(index in 1:PolarisFileNum){
+			tempPower <- append( tempPower, bitPower(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
+		}
+		powerIF[[IF_index]] <- tempPower
+	}
+	mjdSecPolaris <- append(mjdSecPolaris, prefix2MJDsec(prefix[prefix_index[1]]) + seq(0, length(powerIF[[1]])-1, by=1))
+	#-------- Matching between SAM45 and PolariS
+	match_index <- rep(NA, scanLen)
+	for( index in 1:scanLen){ match_index[index] <- which(mjdSecPolaris > (mjdRange[index] - 1.5) & mjdSecPolaris <= (mjdRange[index] - 0.5)) }
+	#-------- Pack into a data frame
+	scanDF <- data.frame(mjdRange, ScanType, AZ, EL, dAZ, dEL, Vrad); DF_label <- c('mjdSec', 'scanType', 'AZ', 'EL', 'dAZ', 'dEL', 'Vrad')
+	for(IF_index in 1:length(IF_ID)){
+		scanDF <- cbind( scanDF, powerIF[[IF_index]][match_index] )
+		DF_label <- append(DF_label, sprintf('power%02d', IF_ID[IF_index]))
+	}
+	names(scanDF) <- DF_label
+	return( scanDF )
 }
+
+#scanPattern <- function(SAM45File, prefix, IF_ID){
+	#PolarisFileNum <- length(prefix)
+	#SAM45Log <- readSAM45(SAM45File)
+	#head1 <- SAM45Log[[1]]; head2 <- SAM45Log[[2]]; SAM45spec <- SAM45Log[[3]]; SAM45df <- SAM45Log[[4]]
+	#for(index in 1:PolarisFileNum){
+		#if(index == 1){
+			#powerMonitor <- bitPower(sprintf("%s.P.%02d", prefix[1], IF_ID))
+			#mjdSec <- prefix2MJDsec(prefix[1]) + seq(0, length(powerMonitor)-1, by=1)
+		#} else {
+			#tmpPowerMonitor <- bitPower(sprintf("%s.P.%02d", prefix[index], IF_ID))
+			#powerMonitor <- append(powerMonitor, tmpPowerMonitor)
+			#mjdSec <- append(mjdSec, (prefix2MJDsec(prefix[index]) + seq(0, length(tmpPowerMonitor)-1, by=1)))
+		#}
+	#}
+	#onScan <- c(); offScan <- c(); RScan <- c();
+	#arrayIndex <- which(SAM45df$cary_name == SAM45df$cary_name[1])
+	#for(scanIndex in arrayIndex){
+		#polaris_index <- which((mjdSec >= (SAM45df$mjd_st[scanIndex]-0.5)) & (mjdSec <= (SAM45df$mjd_ed[scanIndex]-0.5)))
+		#if( (SAM45df$dAZ[scanIndex]^2 + SAM45df$dEL[scanIndex]^2 < 1.0) & (SAM45df$cscan_type[scanIndex] == 'ON') )	onScan <- append(onScan, (min(polaris_index)-1):(max(polaris_index)))	# On scan
+		#if( SAM45df$cscan_type[scanIndex] == 'OFF')	offScan <- append(offScan, (min(polaris_index)-5):(max(polaris_index)+3))								# Off scan
+		#if( SAM45df$cscan_type[scanIndex] == 'R' )	RScan <- append(RScan, tail(polaris_index, length(polaris_index)-2))									# Hot load
+	#}
+	#return(list(mjdSec=mjdSec, power=powerMonitor, SAM45=SAM45df, on=onScan, off=offScan, R=RScan))
+#}
 
 #-------- 
 bunchVec16 <- function(vec){ return(bunch_vec(vec, 16)) }
@@ -211,10 +256,10 @@ bunchVec16 <- function(vec){ return(bunch_vec(vec, 16)) }
 T_sys <- function(Thot, Y){ return(Thot/(Y-1)) }
 
 #-------- 
-TsysScan <- function(Scan){
-	Y <- mean(Scan$power[Scan$R]) / mean(Scan$power[Scan$off])
-	return( T_sys(290, Y) )
-}
+#TsysScan <- function(Scan){
+	#Y <- mean(Scan$power[Scan$R]) / mean(Scan$power[Scan$off])
+	#return( T_sys(290, Y) )
+#}
 
 #-------- 
 gauss4bit <- function(bitDist){ return(gaussNbit(bitDist, 16)) } 
