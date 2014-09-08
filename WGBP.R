@@ -50,7 +50,7 @@ XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 
 #-------- Load XP and identify WG scans
 load(XPfname)
-scanXP <- scanGap(XP, thresh, 60 )
+scanXP <- scanGap(XP, thresh, 1 )
 
 #-------- Generate Complex BP table
 BP <- makeBP(scanXP, prefix)
