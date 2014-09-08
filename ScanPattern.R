@@ -6,6 +6,7 @@ library(RCurl)
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readSAM45.R", ssl.verifypeer = FALSE)))
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/Qeff.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/mjd.R", ssl.verifypeer = FALSE)))
 setwd('.')
 #-------- Function to calculate Tsys from Scan Pattern
 scanTsys <- function(Scan, Tamb){
@@ -56,6 +57,6 @@ Scan <- scanTsys(Scan, 290.0)
 StartUTC <- mjd2doy(Scan$mjdSec[1])
 fileName <- sprintf("%04d%03d%02d%02d%02d.Scan.Rdata", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
 save(Scan, file=fileName)
-cat('Saved into '); cat(fileName); cat('\n')
+cat('Scan and Tsys records are saved into '); cat(fileName); cat('\n')
 
 #-------- Plot
