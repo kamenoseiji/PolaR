@@ -45,12 +45,13 @@ makeBP <- function(scanXP, prefix){
 #-------- Procedures
 args <- commandArgs()
 thresh <- as.numeric(args[6])
-prefix <- args[7:length(args)]
+thresh <- as.numeric(args[7])
+prefix <- args[8:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 
 #-------- Load XP and identify WG scans
 load(XPfname)
-scanXP <- scanGap(XP, thresh, 1 )
+scanXP <- scanGap(XP, thresh, gapThresh )
 
 #-------- Generate Complex BP table
 BP <- makeBP(scanXP, prefix)
