@@ -29,14 +29,23 @@ DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
 
 #-------- On - Off subtraction for total power
 TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
-	basePower <- predict(smooth.spline( OffTime, OffPower, spar=0.0 ), OnTime)$y
-	baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.0 ), OnTime)$y
+	basePower <- predict(smooth.spline( OffTime, OffPower, spar=0.8 ), OnTime)$y
+	baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.8 ), OnTime)$y
 	plot( c(OnTime, OffTime), c(OnPower, OffPower), xlab='MJD [sec]', ylab='Relative Power', type='n')
 	points( OnTime, OnPower, pch=20, col='blue')
 	points( OffTime, OffPower, pch=20, col='cyan')
-	lines( OnTime, basePower )
+	points( OnTime, basePower, pch=20, cex=0.5, col='gray' )
 	return(baseTsys* (OnPower - basePower) / basePower)
 }
+#TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
+	#basePower <- predict(smooth.spline( OffTime, OffPower, spar=0.0 ), OnTime)$y
+	#baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.0 ), OnTime)$y
+	#plot( c(OnTime, OffTime), c(OnPower, OffPower), xlab='MJD [sec]', ylab='Relative Power', type='n')
+	#points( OnTime, OnPower, pch=20, col='blue')
+	#points( OffTime, OffPower, pch=20, col='cyan')
+	#lines( OnTime, basePower )
+	#return(baseTsys* (OnPower - basePower) / basePower)
+#}
 
 #-------- On - Off subtraction for complex power
 TxCal <- function(OnXpower, OffXpower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
@@ -79,10 +88,15 @@ OnIndex <- which(Scan$scanType == 'ON')
 OfIndex <- which(Scan$scanType == 'OFF')
 R_Index <- which(Scan$scanType == 'R')
 
-Ta00 <- TaCal( colSums(on_A00[chRange,]),  colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta00); cat('\n')
-Ta01 <- TaCal( colSums(on_A01[chRange,]),  colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta01); cat('\n')
-Ta02 <- TaCal( colSums(on_A02[chRange,]),  colSums(off_A02[chRange,]), Scan$Tsys02[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta02); cat('\n')
-Ta03 <- TaCal( colSums(on_A03[chRange,]),  colSums(off_A03[chRange,]), Scan$Tsys03[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta03); cat('\n')
+Ta00 <- TaCal( Scan$power00[OnIndex],  Scan$power00[OfIndex], Scan$Tsys00[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta00); cat('\n')
+Ta01 <- TaCal( Scan$power01[OnIndex],  Scan$power01[OfIndex], Scan$Tsys01[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta01); cat('\n')
+Ta02 <- TaCal( Scan$power02[OnIndex],  Scan$power02[OfIndex], Scan$Tsys02[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta02); cat('\n')
+Ta03 <- TaCal( Scan$power03[OnIndex],  Scan$power03[OfIndex], Scan$Tsys03[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta03); cat('\n')
+
+#Ta00 <- TaCal( colSums(on_A00[chRange,]),  colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta00); cat('\n')
+#Ta01 <- TaCal( colSums(on_A01[chRange,]),  colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta01); cat('\n')
+#Ta02 <- TaCal( colSums(on_A02[chRange,]),  colSums(off_A02[chRange,]), Scan$Tsys02[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta02); cat('\n')
+#Ta03 <- TaCal( colSums(on_A03[chRange,]),  colSums(off_A03[chRange,]), Scan$Tsys03[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta03); cat('\n')
 
 Tx00 <- TxCal( colSums(DelayPhaseCal(BPphsCal(on_C00, BP$BP00), scanTime(onMJD), delay00Fit, Re00Fit, Im00Fit)[chRange,]),  colSums(DelayPhaseCal(BPphsCal(off_C00, BP$BP00), scanTime(offMJD), delay00Fit, Re00Fit, Im00Fit)[chRange,]), colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Tx00); cat('\n')
 Tx01 <- TxCal( colSums(DelayPhaseCal(BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]),  colSums(DelayPhaseCal(BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]), colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Tx01); cat('\n')
