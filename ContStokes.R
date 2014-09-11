@@ -102,8 +102,12 @@ Tx00 <- TxCal( colSums(DelayPhaseCal(BPphsCal(on_C00, BP$BP00), scanTime(onMJD),
 Tx01 <- TxCal( colSums(DelayPhaseCal(BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]),  colSums(DelayPhaseCal(BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]), colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Tx01); cat('\n')
 
 Pang <- -azel2pa(median(Scan$AZ[OnIndex]),  median(Scan$EL[OnIndex])) + median(Scan$EL[OnIndex])*pi/180 -pi/2	# Z45 receiver angle
-uncalStokes00 <- corr2Stokes( Ta00, Ta02, Tx00, Pang); uncalStokes00$p <- sqrt(uncalStokes00$Q^2 + uncalStokes00$U^2); uncalStokes00$EVPA <- atan2(uncalStokes00$U, uncalStokes00$Q)*90/pi; uncalStokes00$mjdSec <- scanTime(onMJD)
-uncalStokes01 <- corr2Stokes( Ta01, Ta03, Tx01, Pang); uncalStokes01$p <- sqrt(uncalStokes01$Q^2 + uncalStokes01$U^2); uncalStokes01$EVPA <- atan2(uncalStokes01$U, uncalStokes01$Q)*90/pi; uncalStokes01$mjdSec <- scanTime(onMJD)
+uncalStokes00 <- corr2Stokes( predict(smooth.spline(Scan$mjdSec[OnIndex], Ta00, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(Scan$mjdSec[OnIndex], Ta01, spar=0.8), scanTime(onMJD))$y, Tx00, Pang)
+uncalStokes01 <- corr2Stokes( predict(smooth.spline(Scan$mjdSec[OnIndex], Ta01, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(Scan$mjdSec[OnIndex], Ta03, spar=0.8), scanTime(onMJD))$y, Tx01, Pang)
+uncalStokes00$p <- sqrt(uncalStokes00$Q^2 + uncalStokes00$U^2); uncalStokes00$EVPA <- atan2(uncalStokes00$U, uncalStokes00$Q)*90/pi; uncalStokes00$mjdSec <- scanTime(onMJD)
+uncalStokes01$p <- sqrt(uncalStokes01$Q^2 + uncalStokes01$U^2); uncalStokes01$EVPA <- atan2(uncalStokes01$U, uncalStokes01$Q)*90/pi; uncalStokes01$mjdSec <- scanTime(onMJD)
+#uncalStokes00 <- corr2Stokes( Ta00, Ta02, Tx00, Pang); uncalStokes00$p <- sqrt(uncalStokes00$Q^2 + uncalStokes00$U^2); uncalStokes00$EVPA <- atan2(uncalStokes00$U, uncalStokes00$Q)*90/pi; uncalStokes00$mjdSec <- scanTime(onMJD)
+#uncalStokes01 <- corr2Stokes( Ta01, Ta03, Tx01, Pang); uncalStokes01$p <- sqrt(uncalStokes01$Q^2 + uncalStokes01$U^2); uncalStokes01$EVPA <- atan2(uncalStokes01$U, uncalStokes01$Q)*90/pi; uncalStokes01$mjdSec <- scanTime(onMJD)
 cat(sprintf('AZ=%4.1f  EL=%4.1f  PA=%4.1f (deg)\n', median(Scan$AZ[OnIndex]), median(Scan$EL[OnIndex]), Pang*180/pi))
 fileName <- sprintf("%s.uncalStokes.Rdata", onMJD[[1]][1])
 save(uncalStokes00, uncalStokes01, file=fileName)
