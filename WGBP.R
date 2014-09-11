@@ -45,7 +45,7 @@ makeBP <- function(scanXP, prefix){
 #-------- Procedures
 args <- commandArgs()
 thresh <- as.numeric(args[6])
-thresh <- as.numeric(args[7])
+gapThresh <- as.numeric(args[7])
 prefix <- args[8:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 
