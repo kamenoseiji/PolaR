@@ -11,9 +11,7 @@ eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/ma
 setwd('.')
 
 #-------- Procedures
-# args <- commandArgs()
-args <- c(' ', ' ', ' ', 'Rscript', '~/Programs/PolaR/WGdelay.R',  '2015076035301',  '2015076042301',  '2015076045301',  '2015076052301', '2015076055301',  '2015076062301', '2015076065301', '2015076072301', '2015076075301', '2015076082301', '2015076085301', '2015076092301', '2015076095301')
-setwd('/Volumes/SSD/PolariS/20150317/')
+args <- commandArgs()
 prefix <- args[6:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 BPfname <- sprintf('%s.BP.Rdata', prefix[1])
