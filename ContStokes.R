@@ -37,15 +37,6 @@ TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
 	points( OnTime, basePower, pch=20, cex=0.5, col='gray' )
 	return(baseTsys* (OnPower - basePower) / basePower)
 }
-#TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
-	#basePower <- predict(smooth.spline( OffTime, OffPower, spar=0.0 ), OnTime)$y
-	#baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.0 ), OnTime)$y
-	#plot( c(OnTime, OffTime), c(OnPower, OffPower), xlab='MJD [sec]', ylab='Relative Power', type='n')
-	#points( OnTime, OnPower, pch=20, col='blue')
-	#points( OffTime, OffPower, pch=20, col='cyan')
-	#lines( OnTime, basePower )
-	#return(baseTsys* (OnPower - basePower) / basePower)
-#}
 
 #-------- On - Off subtraction for complex power
 TxCal <- function(OnXpower, OffXpower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
@@ -60,11 +51,11 @@ TxCal <- function(OnXpower, OffXpower, OffPower, Tsys, OnTime, OffTime, TsysTime
 #-------- Stokes Parameters
 corr2Stokes <- function( XX, YY, XY, pang ){
 	cs <- cos(2.0* pang);	sn <- sin(2.0* pang)	# pang: parallactic angle [rad]
-	StokesI <- 0.5* (XX                             + YY)
-	StokesQ <- 0.5* (cs*XX - sn*XY - sn*Conj(XY) - cs*YY)
-	StokesU <- 0.5* (sn*XX + cs*XY + cs*Conj(XY) - sn*YY)
-	StokesV <- 0.5* (    (0-1i)*XY + (0+1i)*Conj(XY)    )
-	return( data.frame(I=StokesI, Q=Re(StokesQ), U=Re(StokesU), V=Re(StokesV)) )
+	StokesI <- 0.5* (XX + YY)
+	StokesQ <- 0.5* cs* (XX - YY) - sn* Re(XY)
+	StokesU <- 0.5* sn* (XX - YY) + cs* Re(XY)
+	StokesV <- Im(XY)
+	return( data.frame(I=StokesI, Q=StokesQ, U=StokesU, V=StokesV) )
 }
 
 
@@ -74,6 +65,7 @@ load(args[6])	 #Load Scan file
 load(args[7])	 #Load SPEC file
 load(args[8])	 #Load delay file
 load(args[9])	 #Load BP file
+setwd('.')
 #
 #-------- Smoothed Delay and Phase
 delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25); delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.2)
@@ -86,31 +78,46 @@ chRange <- floor(0.05*chNum):floor(0.95*chNum)
 
 OnIndex <- which(Scan$scanType == 'ON')
 OfIndex <- which(Scan$scanType == 'OFF')
-R_Index <- which(Scan$scanType == 'R')
 
-Ta00 <- TaCal( Scan$power00[OnIndex],  Scan$power00[OfIndex], Scan$Tsys00[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta00); cat('\n')
-Ta01 <- TaCal( Scan$power01[OnIndex],  Scan$power01[OfIndex], Scan$Tsys01[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta01); cat('\n')
-Ta02 <- TaCal( Scan$power02[OnIndex],  Scan$power02[OfIndex], Scan$Tsys02[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta02); cat('\n')
-Ta03 <- TaCal( Scan$power03[OnIndex],  Scan$power03[OfIndex], Scan$Tsys03[OfIndex], Scan$mjdSec[OnIndex], Scan$mjdSec[OfIndex], Scan$mjdSec[OfIndex]); cat(Ta03); cat('\n')
+#-------- Amplitude calibration of Autocorr
+Ta00 <- TaCal( colSums(on_A00[chRange,]),  colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta00); cat('\n')
+Ta01 <- TaCal( colSums(on_A01[chRange,]),  colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta01); cat('\n')
+Ta02 <- TaCal( colSums(on_A02[chRange,]),  colSums(off_A02[chRange,]), Scan$Tsys02[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta02); cat('\n')
+Ta03 <- TaCal( colSums(on_A03[chRange,]),  colSums(off_A03[chRange,]), Scan$Tsys03[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta03); cat('\n')
 
-#Ta00 <- TaCal( colSums(on_A00[chRange,]),  colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta00); cat('\n')
-#Ta01 <- TaCal( colSums(on_A01[chRange,]),  colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta01); cat('\n')
-#Ta02 <- TaCal( colSums(on_A02[chRange,]),  colSums(off_A02[chRange,]), Scan$Tsys02[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta02); cat('\n')
-#Ta03 <- TaCal( colSums(on_A03[chRange,]),  colSums(off_A03[chRange,]), Scan$Tsys03[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta03); cat('\n')
-
-Tx00 <- TxCal( colSums(DelayPhaseCal(BPphsCal(on_C00, BP$BP00), scanTime(onMJD), delay00Fit, Re00Fit, Im00Fit)[chRange,]),  colSums(DelayPhaseCal(BPphsCal(off_C00, BP$BP00), scanTime(offMJD), delay00Fit, Re00Fit, Im00Fit)[chRange,]), colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Tx00); cat('\n')
-Tx01 <- TxCal( colSums(DelayPhaseCal(BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]),  colSums(DelayPhaseCal(BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]), colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Tx01); cat('\n')
-
+#-------- Delay, phase, bandpass, and amplitude calibration for CrossCorr
+Tx00 <- TxCal( colSums( DelayPhaseCal( BPphsCal(on_C00, BP$BP00), scanTime(onMJD), delay00Fit, Re00Fit, Im00Fit)[chRange,]),
+               colSums( DelayPhaseCal( BPphsCal(off_C00, BP$BP00), scanTime(offMJD), delay00Fit, Re00Fit, Im00Fit)[chRange,]),
+			   sqrt( colSums(off_A00[chRange,])* colSums(off_A02[chRange,]) ),
+			   sqrt(Scan$Tsys00[OfIndex]*  Scan$Tsys02[OfIndex]),
+			   scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex])
+Tx01 <- TxCal( colSums( DelayPhaseCal( BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]),
+               colSums( DelayPhaseCal( BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit)[chRange,]),
+			   sqrt( colSums(off_A01[chRange,])* colSums(off_A03[chRange,]) ),
+			   sqrt(Scan$Tsys01[OfIndex]*  Scan$Tsys03[OfIndex]), scanTime(onMJD),
+			   scanTime(offMJD), Scan$mjdSec[OfIndex])
+#-------- Parallactic angle
 Pang <- -azel2pa(median(Scan$AZ[OnIndex]),  median(Scan$EL[OnIndex])) + median(Scan$EL[OnIndex])*pi/180 -pi/2	# Z45 receiver angle
-uncalStokes00 <- corr2Stokes( predict(smooth.spline(Scan$mjdSec[OnIndex], Ta00, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(Scan$mjdSec[OnIndex], Ta01, spar=0.8), scanTime(onMJD))$y, Tx00, Pang)
-uncalStokes01 <- corr2Stokes( predict(smooth.spline(Scan$mjdSec[OnIndex], Ta01, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(Scan$mjdSec[OnIndex], Ta03, spar=0.8), scanTime(onMJD))$y, Tx01, Pang)
+
+#-------- Correlation -> Stokes Parameters
+if( length( scanTime(onMJD) ) > 3){
+	uncalStokes00 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta00, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta02, spar=0.8), scanTime(onMJD))$y, Tx00, Pang)
+	uncalStokes01 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta01, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta03, spar=0.8), scanTime(onMJD))$y, Tx01, Pang)
+} else {
+	uncalStokes00 = corr2Stokes(Ta00, Ta02, Tx00, Pang)
+	uncalStokes01 = corr2Stokes(Ta01, Ta03, Tx01, Pang)
+}
+
 uncalStokes00$p <- sqrt(uncalStokes00$Q^2 + uncalStokes00$U^2); uncalStokes00$EVPA <- atan2(uncalStokes00$U, uncalStokes00$Q)*90/pi; uncalStokes00$mjdSec <- scanTime(onMJD)
 uncalStokes01$p <- sqrt(uncalStokes01$Q^2 + uncalStokes01$U^2); uncalStokes01$EVPA <- atan2(uncalStokes01$U, uncalStokes01$Q)*90/pi; uncalStokes01$mjdSec <- scanTime(onMJD)
-#uncalStokes00 <- corr2Stokes( Ta00, Ta02, Tx00, Pang); uncalStokes00$p <- sqrt(uncalStokes00$Q^2 + uncalStokes00$U^2); uncalStokes00$EVPA <- atan2(uncalStokes00$U, uncalStokes00$Q)*90/pi; uncalStokes00$mjdSec <- scanTime(onMJD)
-#uncalStokes01 <- corr2Stokes( Ta01, Ta03, Tx01, Pang); uncalStokes01$p <- sqrt(uncalStokes01$Q^2 + uncalStokes01$U^2); uncalStokes01$EVPA <- atan2(uncalStokes01$U, uncalStokes01$Q)*90/pi; uncalStokes01$mjdSec <- scanTime(onMJD)
+
 cat(sprintf('AZ=%4.1f  EL=%4.1f  PA=%4.1f (deg)\n', median(Scan$AZ[OnIndex]), median(Scan$EL[OnIndex]), Pang*180/pi))
 fileName <- sprintf("%s.uncalStokes.Rdata", onMJD[[1]][1])
 save(uncalStokes00, uncalStokes01, file=fileName)
-uncalStokes00	
+uncalStokes00
+cat( mean(uncalStokes00$I), mean(uncalStokes00$Q), mean(uncalStokes00$U), mean(uncalStokes00$V), sqrt( mean(uncalStokes00$Q)^2 + mean(uncalStokes00$U)^2), atan2( mean(uncalStokes00$U), mean(uncalStokes00$Q))*90/pi); cat('\n')
+cat( sd(uncalStokes00$I), sd(uncalStokes00$Q), sd(uncalStokes00$U), sd(uncalStokes00$V), sd(uncalStokes00$p), sd(uncalStokes00$EVPA)); cat('\n')
 uncalStokes01
+cat( mean(uncalStokes01$I), mean(uncalStokes01$Q), mean(uncalStokes01$U), mean(uncalStokes01$V), sqrt( mean(uncalStokes01$Q)^2 + mean(uncalStokes01$U)^2), atan2( mean(uncalStokes01$U), mean(uncalStokes01$Q))*90/pi); cat('\n')
+cat( sd(uncalStokes01$I), sd(uncalStokes01$Q), sd(uncalStokes01$U), sd(uncalStokes01$V), sd(uncalStokes01$p), sd(uncalStokes01$EVPA)); cat('\n')
 cat('Stokes parameters (D-term uncaled) was saved into '); cat(fileName); cat('\n')

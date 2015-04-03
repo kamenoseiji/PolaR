@@ -61,7 +61,7 @@ load(scanFile)
 #-------- Scan Segments
 R_index   <- which(Scan$scanType == 'R');  RMJD   <- scanSegment(Scan$mjdSec[R_index])
 ON_index  <- which(Scan$scanType == 'ON'); onMJD  <- scanSegment(Scan$mjdSec[ON_index])
-OFF_index <- which(Scan$scanType == 'OFF' | Scan$scanType == 'SKY');offMJD <- scanSegment(Scan$mjdSec[OFF_index])
+OFF_index <- which(Scan$scanType == 'OFF');offMJD <- scanSegment(Scan$mjdSec[OFF_index])
 
 #-------- List prefix of PolariS data
 Year <- mjd2doy(Scan$mjdSec[1])[[1]]
@@ -85,4 +85,4 @@ on_A03 <- integSegment(prefix, 'A', 3, onMJD ); off_A03 <- integSegment(prefix, 
 StartUTC <- mjd2doy(min(Scan$mjdSec[ON_index]))
 fileName <- sprintf("%04d%03d%02d%02d%02d.SPEC.Rdata", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
 save(onMJD, on_C00, on_C01, on_A00, on_A01, on_A02, on_A03, offMJD, off_C00, off_C01, off_A00, off_A01, off_A02, off_A03, RMJD, R_C00, R_C01, R_A00, R_A01, R_A02, R_A03, file=fileName)
-cat('Segment-integrated spectra are saved into '); cat(fileName); cat('\n')
+cat('Segment-integrated spectra (uncal) are saved into '); cat(fileName); cat('\n')
