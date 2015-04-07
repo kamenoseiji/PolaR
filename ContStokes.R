@@ -31,6 +31,12 @@ DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
 TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
 	basePower <- predict(smooth.spline( OffTime, OffPower, spar=0.8 ), OnTime)$y
 	baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.8 ), OnTime)$y
+	# cat(TsysTime); cat('\n')
+	# cat(Tsys); cat('\n')
+	cat(baseTsys); cat('\n')
+	# cat(OnTime); cat('\n')
+	# cat(OnPower); cat('\n')
+	# cat(OffPower); cat('\n')
 	plot( c(OnTime, OffTime), c(OnPower, OffPower), xlab='MJD [sec]', ylab='Relative Power', type='n')
 	points( OnTime, OnPower, pch=20, col='blue')
 	points( OffTime, OffPower, pch=20, col='cyan')
@@ -60,12 +66,16 @@ corr2Stokes <- function( XX, YY, XY, pang ){
 
 
 #-------- Load Spec and Scan data
-args <- commandArgs()
-load(args[6])	 #Load Scan file
-load(args[7])	 #Load SPEC file
-load(args[8])	 #Load delay file
-load(args[9])	 #Load BP file
+args <- commandArgs(trailingOnly = T)
 setwd('.')
+#setwd('/Volumes/SSD/PolariS/20150317/')
+#args <- c('2015076052841.Scan.Rdata', '2015076052912.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
+load(args[1])	 #Load Scan file
+load(args[2])	 #Load SPEC file
+load(args[3])	 #Load delay file
+load(args[4])	 #Load BP file
+
+
 #
 #-------- Smoothed Delay and Phase
 delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25); delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.2)
@@ -80,10 +90,10 @@ OnIndex <- which(Scan$scanType == 'ON')
 OfIndex <- which(Scan$scanType == 'OFF')
 
 #-------- Amplitude calibration of Autocorr
-Ta00 <- TaCal( colSums(on_A00[chRange,]),  colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta00); cat('\n')
-Ta01 <- TaCal( colSums(on_A01[chRange,]),  colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta01); cat('\n')
-Ta02 <- TaCal( colSums(on_A02[chRange,]),  colSums(off_A02[chRange,]), Scan$Tsys02[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta02); cat('\n')
-Ta03 <- TaCal( colSums(on_A03[chRange,]),  colSums(off_A03[chRange,]), Scan$Tsys03[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]); cat(Ta03); cat('\n')
+Ta00 <- TaCal( colSums(on_A00[chRange,]),  colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]) #; cat(Scan$Tsys00[OfIndex]); cat('\n') # ; cat(Ta00); cat('\n')
+Ta01 <- TaCal( colSums(on_A01[chRange,]),  colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]) #; cat(Scan$Tsys01[OfIndex]); cat('\n') # ; cat(Ta01); cat('\n')
+Ta02 <- TaCal( colSums(on_A02[chRange,]),  colSums(off_A02[chRange,]), Scan$Tsys02[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]) #; cat(Scan$Tsys02[OfIndex]); cat('\n') # ; cat(Ta02); cat('\n')
+Ta03 <- TaCal( colSums(on_A03[chRange,]),  colSums(off_A03[chRange,]), Scan$Tsys03[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]) #; cat(Scan$Tsys03[OfIndex]); cat('\n') # ; cat(Ta03); cat('\n')
 
 #-------- Delay, phase, bandpass, and amplitude calibration for CrossCorr
 Tx00 <- TxCal( colSums( DelayPhaseCal( BPphsCal(on_C00, BP$BP00), scanTime(onMJD), delay00Fit, Re00Fit, Im00Fit)[chRange,]),
@@ -104,8 +114,8 @@ if( length( scanTime(onMJD) ) > 3){
 	uncalStokes00 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta00, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta02, spar=0.8), scanTime(onMJD))$y, Tx00, Pang)
 	uncalStokes01 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta01, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta03, spar=0.8), scanTime(onMJD))$y, Tx01, Pang)
 } else {
-	uncalStokes00 = corr2Stokes(Ta00, Ta02, Tx00, Pang)
-	uncalStokes01 = corr2Stokes(Ta01, Ta03, Tx01, Pang)
+	uncalStokes00 <- corr2Stokes(Ta00, Ta02, Tx00, Pang)
+	uncalStokes01 <- corr2Stokes(Ta01, Ta03, Tx01, Pang)
 }
 
 uncalStokes00$p <- sqrt(uncalStokes00$Q^2 + uncalStokes00$U^2); uncalStokes00$EVPA <- atan2(uncalStokes00$U, uncalStokes00$Q)*90/pi; uncalStokes00$mjdSec <- scanTime(onMJD)

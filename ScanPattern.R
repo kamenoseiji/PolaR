@@ -13,12 +13,18 @@ setwd('.')
 scanTsys <- function(Scan, Tamb){
 	nameList <- names(Scan)
 	R_index <- which(Scan$scanType == 'R')
-	index <- which(Scan$scanType == 'OFF' | Scan$scanType == 'ON' | Scan$scanType == 'SKY')
+	#-------- Median Window Filter
+	medR <- median( Scan$power00[R_index])
+	R_index <- which( abs( (Scan$power00 - medR)/medR ) < 0.02 )
+	#-------- On and Off scans
+	index <- which(Scan$scanType == 'OFF' | Scan$scanType == 'ON')
+	OutOfR_index <- which( Scan$mjdSec > max(Scan$mjdSec[R_index]))
 	power_ptr <- grep('power', nameList); IFnum <- length(power_ptr)
 	for(IF_index in 1:IFnum){
 		 IF_ID <- as.integer(strsplit(nameList[power_ptr[IF_index]], "power")[[1]][2])
 		 Tsys   <- rep(NA, length(Scan$mjdSec))
 		 RPower <- predict(smooth.spline(Scan$mjdSec[R_index], Scan[[power_ptr[IF_index]]][R_index], spar=1.0), Scan$mjdSec)$y
+		 RPower[OutOfR_index] <- RPower[max(R_index)]
 		 Tsys[index]  <- Tamb / (RPower[index] / Scan[[power_ptr[IF_index]]][index] - 1.0)
 		 Scan <- cbind(Scan, Tsys)
 		 nameList <- append(nameList, sprintf('Tsys%02d', IF_ID))
@@ -28,9 +34,10 @@ scanTsys <- function(Scan, Tamb){
 }
 
 #-------- Procedures
-args <- commandArgs()
+args <- commandArgs(trailingOnly = T)
 prefix <- character(0)
-SAM45File <- args[6:length(args)]
+SAM45File <- args
+
 
 #-------- List prefix of PolariS data
 Year <- substr(strsplit(SAM45File[1], '\\.')[[1]][5], 1, 4)
@@ -48,12 +55,13 @@ for(index in 1:length(P00fileList)){
 
 #-------- Produce Scan data frame
 for(fileIndex in 1:length(SAM45File)){
+	cat(sprintf('Processing %s ...\n', SAM45File[fileIndex]))
 	tempScan <- scanPattern(SAM45File[fileIndex], prefix, IF_ID)
 	if(fileIndex == 1){	Scan <- tempScan}
 	else { Scan <- rbind(Scan, tempScan)}
 }
 #-------- Tsys
-Scan <- scanTsys(Scan, 290.0)
+Scan <- scanTsys(Scan, 280.0)
 #-------- Save
 StartUTC <- mjd2doy(Scan$mjdSec[1])
 fileName <- sprintf("%04d%03d%02d%02d%02d.Scan.Rdata", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
