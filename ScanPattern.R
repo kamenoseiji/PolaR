@@ -38,7 +38,6 @@ args <- commandArgs(trailingOnly = T)
 prefix <- character(0)
 SAM45File <- args
 
-
 #-------- List prefix of PolariS data
 Year <- substr(strsplit(SAM45File[1], '\\.')[[1]][5], 1, 4)
 P00fileList <- system(  sprintf('ls %s*.P.00', Year), intern=T )

@@ -53,9 +53,9 @@ integSegment <- function( prefix, postfix, IF_index, MJD ){
 }
 
 #-------- Procedures
-args <- commandArgs()
+args <- commandArgs(trailingOnly = T)
 prefix <- character(0)
-scanFile <- args[6]
+scanFile <- args[1]
 load(scanFile)
 
 #-------- Scan Segments
@@ -84,6 +84,5 @@ on_A03 <- integSegment(prefix, 'A', 3, onMJD ); off_A03 <- integSegment(prefix, 
 #-------- Save into file
 StartUTC <- mjd2doy(min(Scan$mjdSec[ON_index]))
 fileName <- sprintf("%04d%03d%02d%02d%02d.SPEC.Rdata", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
-#save(onMJD, on_C00, on_C01, on_A00, on_A01, on_A02, on_A03, offMJD, off_C00, off_C01, off_A00, off_A01, off_A02, off_A03, RMJD, R_C00, R_C01, R_A00, R_A01, R_A02, R_A03, file=fileName)
 save(onMJD, on_C00, on_C01, on_A00, on_A01, on_A02, on_A03, offMJD, off_C00, off_C01, off_A00, off_A01, off_A02, off_A03, file=fileName)
 cat('Segment-integrated spectra (uncal) are saved into '); cat(fileName); cat('\n')

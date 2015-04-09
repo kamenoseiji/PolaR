@@ -138,7 +138,7 @@ readSAM45_data <- function( file_ptr ){
 		readBin(file_ptr, numeric(), n=5, size=8),	# P+O 気象データ (取得は1[回/スキャン]); FL :     0:気温[℃], 1:気圧[hPa], 2:水蒸気圧[hPa], 3:風速[m/s], 4:風向(真北0度)
 		readBin(file_ptr, numeric(), n=16, size=8),	# ---: --- 予備領域
 		readBin(file_ptr, integer(), size=4),	# SET: P+O 積分時間 [sec]
-		readBin(file_ptr, integer(), size=4),	# LC :   O (OTF) ON点のスキャン　カウンタ (初期値1)
+		readBin(file_ptr, integer(), size=4),	# LC :   O (OTF) ON点のスキャン点カウンタ (初期値1)
 		readBin(file_ptr, integer(), size=4),	# LC :   O (OTF) ON点のスキャン点カウンタ
 		readBin(file_ptr, integer(), size=4),	# LC :   O (OTF) スキャントータル通番 0:ZERO, 1:R, 2:SKY, ...
 		readBin(file_ptr, integer(), n=14, size=4),	# ---: --- 予備領域

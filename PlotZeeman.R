@@ -21,10 +21,10 @@ smoothWidth <- 384; knotNum <- floor(chNum / smoothWidth)
 PDFfilename <- sprintf("%s.Zeeman.pdf", strsplit(args[1], "\\.")[[1]][1])
 #-------- Plot Stokes I for HC3N
 pdf(PDFfilename)
-plotFreq <- c(2.0, 2.5) # range in MHz
-lineFreq <- c(2.15, 2.4)
-#plotFreq <- c(1.5, 1.95) # range in MHz
-#lineFreq <- c(1.65, 1.87)
+#plotFreq <- c(2.0, 2.5) # range in MHz
+#lineFreq <- c(2.15, 2.4)
+plotFreq <- c(1.5, 1.95) # range in MHz
+lineFreq <- c(1.65, 1.87)
 #plotFreq <- c(0.1, 0.5)
 #lineFreq <- c(0.25, 0.35)
 #plotFreq <- c(3.4, 3.7)
@@ -45,10 +45,10 @@ lines(freq[plotRange]-0.5*chSep, predStokesV[plotRange]*fit$coefficients[2], typ
 legend(min(freq[plotRange]), 0.1, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][4]))
 
 #-------- Plot Stokes I for CCS
-plotFreq <- c(1.8, 2.2) # range in MHz
-lineFreq <- c(1.92, 2.1)
-#plotFreq <- c(1.65, 1.95) # range in MHz
-#lineFreq <- c(1.74, 1.87)
+#plotFreq <- c(1.8, 2.2) # range in MHz
+#lineFreq <- c(1.92, 2.1)
+plotFreq <- c(1.65, 1.95) # range in MHz
+lineFreq <- c(1.74, 1.87)
 plotRange <- which.min(abs(freq - plotFreq[1])):which.min(abs(freq - plotFreq[2]))
 lineRange <- which.min(abs(freq - lineFreq[1])):which.min(abs(freq - lineFreq[2]))
 fitStokesI <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=4*knotNum)

@@ -106,27 +106,18 @@ TxCal <- function(OnXspec, OffXspec, OffSpec0, OffSpec1, mjdOn, mjdOff, Tsys, we
 	return(TX)
 }
 
-#-------- Stokes Parameters
-corr2Stokes <- function( XX, YY, XY, pang ){
-	cs <- cos(2.0* pang);	sn <- sin(2.0* pang)	# pang: parallactic angle [rad]
-	StokesI <- 0.5* (XX + YY)
-	StokesQ <- 0.5* cs* (XX - YY) - sn* Re(XY)
-	StokesU <- 0.5* sn* (XX - YY) + cs* Re(XY)
-	StokesV <- Im(XY)
-	return( data.frame(I=StokesI, Q=StokesQ, U=StokesU, V=StokesV) )
-}
-
-
 #-------- Load Spec and Scan data
 args <- commandArgs(trailingOnly = T)
 setwd('.')
-#setwd('/Volumes/SSD/PolariS/20150317/')
+#setwd('/Volumes/SSD/PolariS/20140417/')
+#args <- c('2014107013853.Scan.Rdata', '2014107013932.SPEC.Rdata', '2014107040319.Dcomb.Rdata', '2014107010610.WG.Rdata', '2014107010610.BP.Rdata')
 #args <- c('2015076052841.Scan.Rdata', '2015076052912.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 #args <- c('2015076043056.Scan.Rdata', '2015076043132.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 load(args[1])	 #Load Scan file
 load(args[2])	 #Load SPEC file
-load(args[3])	 #Load delay file
-load(args[4])	 #Load BP file
+load(args[3])	 #Load D-term file
+load(args[4])	 #Load delay file
+load(args[5])	 #Load BP file
 #
 #-------- Smoothed Delay and Phase
 delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25)
@@ -150,7 +141,11 @@ smoothWidth <- 384; knotNum <- floor(chNum / smoothWidth)
 #-------- Scan Pattern
 OnIndex <- which(Scan$scanType == 'ON')
 OfIndex <- which(Scan$scanType == 'OFF')
-
+D_index <- which( D$Gxy02 + D$Gxy13 > 0.9* median( D$Gxy02 + D$Gxy13 ))	# Flag pointing-error out
+Rxy02 <- mean(D$Rxy02[D_index])
+Rxy13 <- mean(D$Rxy13[D_index])
+Dxy02 <- mean(D$XY02[D_index])
+Dxy13 <- mean(D$XY13[D_index])
 #-------- Tsys at each scan
 Tsys00 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys00[OnIndex], spar=0.5), scanTime(onMJD))$y
 Tsys01 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys01[OnIndex], spar=0.5), scanTime(onMJD))$y
@@ -164,10 +159,10 @@ Pang <- -azel2pa(AZ, EL) + EL*pi/180 - pi/2
 cs <- cos(Pang)
 sn <- sin(Pang)
 #-------- Amplitude calibration of Autocorr
-Ta00 <- TaCal(on_A00, off_A00, scanTime(onMJD), scanTime(offMJD), Tsys00, weight, mitigCH)
-Ta01 <- TaCal(on_A01, off_A01, scanTime(onMJD), scanTime(offMJD), Tsys01, weight, mitigCH)
-Ta02 <- TaCal(on_A02, off_A02, scanTime(onMJD), scanTime(offMJD), Tsys02, weight, mitigCH)
-Ta03 <- TaCal(on_A03, off_A03, scanTime(onMJD), scanTime(offMJD), Tsys03, weight, mitigCH)
+Ta00 <- TaCal(on_A00, off_A00, scanTime(onMJD), scanTime(offMJD), Tsys00, weight, mitigCH) / sqrt(Rxy02)
+Ta01 <- TaCal(on_A01, off_A01, scanTime(onMJD), scanTime(offMJD), Tsys01, weight, mitigCH) / sqrt(Rxy13)
+Ta02 <- TaCal(on_A02, off_A02, scanTime(onMJD), scanTime(offMJD), Tsys02, weight, mitigCH) * sqrt(Rxy02)
+Ta03 <- TaCal(on_A03, off_A03, scanTime(onMJD), scanTime(offMJD), Tsys03, weight, mitigCH) * sqrt(Rxy13)
 
 #-------- Delay, phase, bandpass, and amplitude calibration for CrossCorr
 Tx02 <- TxCal( 
@@ -190,14 +185,14 @@ weight13 <- 1.0 / (Tsys01 * Tsys03)
 StokesI02 <- 0.5*(rowSums(Ta00* weight0)/sum(weight0) + rowSums(Ta02* weight2)/sum(weight2))
 StokesI13 <- 0.5*(rowSums(Ta01* weight1)/sum(weight1) + rowSums(Ta03* weight3)/sum(weight3))
 
-StokesQ02 <- 0.5* (rowSums(Ta00* cs* weight0)/sum(weight0) - rowSums(Ta02* cs* weight2)/sum(weight2)) - rowSums(Re(Tx02)* sn* weight02) / sum(weight02)
-StokesQ13 <- 0.5* (rowSums(Ta01* cs* weight1)/sum(weight1) - rowSums(Ta03* cs* weight3)/sum(weight3)) - rowSums(Re(Tx13)* sn* weight13) / sum(weight13)
+StokesQ02 <- 0.5* (rowSums(Ta00* cs* weight0)/sum(weight0) - rowSums(Ta02* cs* weight2)/sum(weight2)) - rowSums((Re(Tx02) - Re(Dxy02)* StokesI02)* sn* weight02) / sum(weight02)
+StokesQ13 <- 0.5* (rowSums(Ta01* cs* weight1)/sum(weight1) - rowSums(Ta03* cs* weight3)/sum(weight3)) - rowSums((Re(Tx13) - Re(Dxy13)* StokesI13)* sn* weight13) / sum(weight13)
 
-StokesU02 <- 0.5* (rowSums(Ta00* sn* weight0)/sum(weight0) - rowSums(Ta02* sn* weight2)/sum(weight2)) + rowSums(Re(Tx02)* cs* weight02) / sum(weight02)
-StokesU13 <- 0.5* (rowSums(Ta01* sn* weight1)/sum(weight1) - rowSums(Ta03* sn* weight3)/sum(weight3)) + rowSums(Re(Tx13)* cs* weight13) / sum(weight13)
+StokesU02 <- 0.5* (rowSums(Ta00* sn* weight0)/sum(weight0) - rowSums(Ta02* sn* weight2)/sum(weight2)) + rowSums((Re(Tx02) - Re(Dxy02)* StokesI02)* cs* weight02) / sum(weight02)
+StokesU13 <- 0.5* (rowSums(Ta01* sn* weight1)/sum(weight1) - rowSums(Ta03* sn* weight3)/sum(weight3)) + rowSums((Re(Tx13) - Re(Dxy13)* StokesI13)* cs* weight13) / sum(weight13)
 
-StokesV02 <- rowSums(Im(Tx02)* weight02)/sum(weight02)
-StokesV13 <- rowSums(Im(Tx13)* weight13)/sum(weight13)
+StokesV02 <- rowSums(Im(Tx02)* weight02)/sum(weight02) - Im(Dxy02)* StokesI02
+StokesV13 <- rowSums(Im(Tx13)* weight13)/sum(weight13) - Im(Dxy13)* StokesI13
 
 #-------- Save into file
 fileName <- sprintf("%s.STOKES.Rdata", strsplit(args[2], "\\.")[[1]][1])
