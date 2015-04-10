@@ -11,8 +11,8 @@ eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/ma
 setwd('.')
 
 #-------- Procedures
-args <- commandArgs()
-prefix <- args[6:length(args)]
+args <- commandArgs(trailingOnly = T)
+prefix <- args[1:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 BPfname <- sprintf('%s.BP.Rdata', prefix[1])
 

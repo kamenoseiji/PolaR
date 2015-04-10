@@ -26,8 +26,8 @@ scanXP <- function(prefix){
 
 
 #-------- Procedures
-args <- commandArgs()
-prefix <- args[6:length(args)]
+args <- commandArgs(trailingOnly = T)
+prefix <- args[1:length(args)]
 XP <- scanXP(prefix)
 save(XP, file=sprintf("%s.XP.Rdata", prefix[1]))
 pdf(sprintf('%s.WG.pdf', prefix[1]))

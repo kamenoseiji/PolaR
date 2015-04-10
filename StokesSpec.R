@@ -105,6 +105,20 @@ TxCal <- function(OnXspec, OffXspec, OffSpec0, OffSpec1, mjdOn, mjdOff, Tsys, we
 	}
 	return(TX)
 }
+#-------- Doppler Tracking
+deDopp <- function( spec, chShift ){
+	timeNum <- ncol(spec)
+	chNum <- nrow(spec)
+	for( time_index in 1:timeNum ){
+		if(chShift[time_index] > 0){
+			spec[,time_index] <- c(spec[(chNum - chShift[time_index] + 1):chNum, time_index], spec[1:(chNum - chShift[time_index]), time_index])
+		}
+		if(chShift[time_index] < 0){
+			spec[,time_index] <- c(spec[(chShift[time_index] + 1):chNum, time_index], spec[1:chShift[time_index], time_index])
+		}
+	}
+	return(spec)
+}
 
 #-------- Load Spec and Scan data
 args <- commandArgs(trailingOnly = T)
@@ -152,6 +166,12 @@ Tsys01 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys01[OnIndex], spar
 Tsys02 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys02[OnIndex], spar=0.5), scanTime(onMJD))$y
 Tsys03 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys03[OnIndex], spar=0.5), scanTime(onMJD))$y
 
+#-------- Radial Velocity
+#DeltaFreq <- 317.00 - 206.00	# [MHz], LO(CH1) - LO(CH2)	// 2014.4.17
+DeltaFreq <- 317.50 - 206.20	# [MHz], LO(CH1) - LO(CH2)  // 2015.3.15 - 17
+Vrad <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Vrad[OnIndex], spar=0.5), scanTime(onMJD))$y
+chShift <- round(DeltaFreq* Vrad / 299792458 / chSep)		# Number of channels to shift
+
 #-------- Parallactic angle
 AZ <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$AZ[OnIndex], spar=0.5), scanTime(onMJD))$y
 EL <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$EL[OnIndex], spar=0.5), scanTime(onMJD))$y
@@ -174,7 +194,10 @@ Tx13 <- TxCal(
 	DelayPhaseCal( BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit),
 	DelayPhaseCal( BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit),
 	off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys03), weight, mitigCH)
-	
+#-------- Doppler Tracking
+Ta00 <- deDopp(Ta00, chShift)
+Ta02 <- deDopp(Ta02, chShift)
+Tx02 <- deDopp(Tx02, chShift)
 #-------- Time Integration to determine Stokes spectrum
 weight0 <- 1.0 / Tsys00^2
 weight1 <- 1.0 / Tsys01^2

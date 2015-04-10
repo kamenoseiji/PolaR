@@ -35,11 +35,11 @@ makeBP <- function(scanXP, prefix){
 }
 
 #-------- Procedures
-args <- commandArgs()
-thresh_L <- as.numeric(args[6])
-thresh_H <- as.numeric(args[7])
-gapThresh <- as.numeric(args[8])
-prefix <- args[9:length(args)]
+args <- commandArgs(trailingOnly = T)
+thresh_L <- as.numeric(args[1])
+thresh_H <- as.numeric(args[2])
+gapThresh <- as.numeric(args[3])
+prefix <- args[4:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 
 #-------- Load XP and identify WG scans
