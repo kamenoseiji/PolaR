@@ -11,17 +11,17 @@ setwd('.')
 #args <- c('2015076052841.Scan.Rdata', '2015076052912.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 #args <- c('2015076043056.Scan.Rdata', '2015076043132.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 load(args[1])	 #Load Stokes file
-freq_track <- 45379033000 # [Hz]
-freq_center <- c(45490316000, 45379033000, 45490316000, 45379033000)
-freq_IF <- 5208	# [MHz]
-freq_1stLO <- freq_track - freq_IF*1e6	#[Hz]
-freq_BBC <- c(5317.0, 5206.0, 5317.0, 5206.0)
-freq_rest   <- freq_center
-velSrc      <- 5900 # m/s
+# freq_track <- 45379033000 # [Hz]
+# freq_center <- c(45490316000, 45379033000, 45490316000, 45379033000)
+# freq_IF <- 5208	# [MHz]
+# freq_1stLO <- freq_track - freq_IF*1e6	#[Hz]
+# freq_BBC <- c(5317.0, 5206.0, 5317.0, 5206.0)
+# freq_rest   <- freq_center
+# velSrc      <- 5900 # m/s
 chNum <- length(StokesI02)
 chRange <- floor(0.05*chNum):floor(0.95*chNum)
 freq <- (0:(chNum-1))/chNum* 4.0	# MHz
-veloc0 <- (2.0 - freq)*1.0e6 /  freq_center[1] * 299792458 + 
+# veloc0 <- (2.0 - freq)*1.0e6 /  freq_center[1] * 299792458 + 
 chSep <- 4.0 / chNum
 weight <- rep(1, chNum)
 smoothWidth <- 384; knotNum <- floor(chNum / smoothWidth)
