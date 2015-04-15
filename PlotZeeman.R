@@ -19,11 +19,12 @@ load(args[1])	 #Load Stokes file
 # freq_rest   <- freq_center
 # velSrc      <- 5900 # m/s
 chNum <- length(StokesI02)
+SDrange <- 8193:16384
 chRange <- floor(0.05*chNum):floor(0.95*chNum)
 freq <- (0:(chNum-1))/chNum* 4.0	# MHz
 # veloc0 <- (2.0 - freq)*1.0e6 /  freq_center[1] * 299792458 + 
 chSep <- 4.0 / chNum
-weight <- rep(1, chNum)
+weight <- rep(0, chNum); weight[chRange] = 1.0
 smoothWidth <- 384; knotNum <- floor(chNum / smoothWidth)
 #-------- Save into file
 PDFfilename <- sprintf("%s.Zeeman.pdf", strsplit(args[1], "\\.")[[1]][1])
@@ -41,16 +42,21 @@ plotRange <- which.min(abs(freq - plotFreq[1])):which.min(abs(freq - plotFreq[2]
 lineRange <- which.min(abs(freq - lineFreq[1])):which.min(abs(freq - lineFreq[2]))
 fitStokesI <- smooth.spline(freq, StokesI02, w=weight, all.knots=F, nknots=4*knotNum)
 predStokesV <- predict(fitStokesI, (freq + 5e-6))$y - predict(fitStokesI, (freq - 5e-6))$y
+predStokesI <- predict(fitStokesI, freq)$y
 plotBunch <- 16
 plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesI02[plotRange], plotBunch), type='s', xlab='Frequency [MHz]', ylab='Stokes I [K]', main='TMC-1 HC3N')
 lines(freq[plotRange], predict(fitStokesI, freq[plotRange])$y, type='s', col='red')
 #-------- Plot Stokes V for HC3N
 plotBunch <- 32
-fit <- lm( formula=y~1+ x, data=data.frame(x=predStokesV[lineRange], y=StokesV02[lineRange]))
-plot( bunch_vec(freq[plotRange], plotBunch) - 0.5*plotBunch*chSep, bunch_vec(StokesV02[plotRange], plotBunch) - fit$coefficients[1], type='s', ylim=c(-1e-1, 1e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main='TMC-1 HC3N')
-points( bunch_vec(freq[plotRange], plotBunch), bunch_vec(StokesV02[plotRange], plotBunch) - fit$coefficients[1], pch=20, cex=0.5)
+err <- sd(StokesV02[SDrange]) / sqrt(plotBunch)
+fit <- lm(formula=z~1+x+y, data=data.frame(x=predStokesV[lineRange], y=predStokesI[lineRange], z=StokesV02[lineRange]))
+summary(fit)
+plotX <- bunch_vec(freq[plotRange], plotBunch)
+plotY <- bunch_vec(StokesV02[plotRange] - fit$coefficients[3]* predStokesI[plotRange] - fit$coefficients[1], plotBunch)
+plot( plotX, plotY , pch=20, ylim=c(-1e-1, 1e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main='TMC-1 HC3N')
+arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
 lines(freq[plotRange]-0.5*chSep, predStokesV[plotRange]*fit$coefficients[2], type='s', col='red')
-legend(min(freq[plotRange]), 0.1, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][4]))
+legend(min(freq[plotRange]), 0.1, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][5]))
 
 #-------- Plot Stokes I for CCS
 #plotFreq <- c(1.8, 2.2) # range in MHz
@@ -61,15 +67,20 @@ plotRange <- which.min(abs(freq - plotFreq[1])):which.min(abs(freq - plotFreq[2]
 lineRange <- which.min(abs(freq - lineFreq[1])):which.min(abs(freq - lineFreq[2]))
 fitStokesI <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=4*knotNum)
 predStokesV <- predict(fitStokesI, (freq + 5e-6))$y - predict(fitStokesI, (freq - 5e-6))$y
+predStokesI <- predict(fitStokesI, freq)$y
 plotBunch <- 16
 plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesI13[plotRange], plotBunch), type='s', xlab='Frequency [MHz]', ylab='Stokes I [K]', main='TMC-1 CCS')
 lines(freq[plotRange], predict(fitStokesI, freq[plotRange])$y, type='s', col='red')
 #-------- Plot Stokes V for CCS
 plotBunch <- 32
-fit <- lm( formula=y~1+ x, data=data.frame(x=predStokesV[lineRange], y=StokesV13[lineRange]))
-plot( bunch_vec(freq[plotRange], plotBunch) - 0.5*plotBunch*chSep, bunch_vec(StokesV13[plotRange], plotBunch) - fit$coefficients[1], type='s', ylim=c(-1e-1, 1e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main='TMC-1 CCS')
-points( bunch_vec(freq[plotRange], plotBunch), bunch_vec(StokesV13[plotRange], plotBunch) - fit$coefficients[1], pch=20, cex=0.5)
+err <- sd(StokesV13[SDrange]) / sqrt(plotBunch)
+fit <- lm( formula=z~1+x+y, data=data.frame(x=predStokesV[lineRange], y=predStokesI[lineRange], z=StokesV13[lineRange]))
+summary(fit)
+plotX <- bunch_vec(freq[plotRange], plotBunch)
+plotY <- bunch_vec(StokesV13[plotRange] - fit$coefficients[3]* predStokesI[plotRange] - fit$coefficients[1], plotBunch)
+plot( plotX, plotY , pch=20, ylim=c(-1e-1, 1e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main='TMC-1 CCS')
+arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
 lines(freq[plotRange]-0.5*chSep, predStokesV[plotRange]*fit$coefficients[2], type='s', col='red')
-legend(min(freq[plotRange]), 0.1, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][4]))
+legend(min(freq[plotRange]), 0.1, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][5]))
 dev.off()
 
