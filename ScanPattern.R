@@ -35,6 +35,8 @@ scanTsys <- function(Scan, Tamb){
 
 #-------- Procedures
 args <- commandArgs(trailingOnly = T)
+#args <- c('SAM45.TMCHC3N.as708fn.proj2.20150416115327', 'SAM45.TMCHC3N.as708fn.proj2.20150416123911', 'SAM45.TMCHC3N.as708fn.proj2.20150416135739', 'SAM45.TMCHC3N.as708fn.proj2.20150416145542')
+#setwd('/Volumes/SSD/PolariS/20150416/')
 prefix <- character(0)
 SAM45File <- args
 

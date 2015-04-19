@@ -20,8 +20,9 @@ integSegment <- function( prefix, postfix, IF_index, MJD ){
 	for(scanIndex in 1:length(MJD[[1]])){
 		startFileIndex <- findPrefix(MJD[[1]][scanIndex], prefix)
 		endFileIndex   <- findPrefix(MJD[[2]][scanIndex], prefix)
+        fileName <- sprintf('%s.%s.%02d', prefix[startFileIndex], postfix, IF_index)
 		if( startFileIndex != prevFileIndex){
-			cat(sprintf('New P=%d S=%d E=%d \n', prevFileIndex, startFileIndex, endFileIndex))
+			cat(sprintf('New P=%d S=%d E=%d : %s\n', prevFileIndex, startFileIndex, endFileIndex, fileName))
 			if( postfix == 'C'){
 				XP <- readPolariS_X(sprintf('%s.%s.%02d', prefix[startFileIndex], postfix, IF_index))
 			} else {
@@ -29,7 +30,7 @@ integSegment <- function( prefix, postfix, IF_index, MJD ){
 			}
 		}
 		if( endFileIndex > startFileIndex){
-			cat(sprintf('Cont P=%d S=%d E=%d \n', prevFileIndex, startFileIndex, endFileIndex))
+			cat(sprintf('Cont P=%d S=%d E=%d : %s\n', prevFileIndex, startFileIndex, endFileIndex, fileName))
 			if( postfix == 'C'){
 				temp <- readPolariS_X(sprintf('%s.%s.%02d', prefix[endFileIndex], postfix, IF_index))
 			} else {
