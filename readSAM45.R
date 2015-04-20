@@ -207,8 +207,8 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 	for(IF_index in 1:length(IF_ID)){
 		tempPower <- numeric(0)
 		for(index in 1:PolarisFileNum){
-			# tempPower <- append( tempPower, bitPower(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
-			tempPower <- append( tempPower, bitThresh(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index]), Thresh[,IF_index]))
+			tempPower <- append( tempPower, bitPower(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
+			# tempPower <- append( tempPower, bitThresh(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index]), Thresh[,IF_index]))
 		}
 		powerIF[[IF_index]] <- tempPower
 	}
