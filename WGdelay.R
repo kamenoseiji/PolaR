@@ -11,9 +11,9 @@ eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/ma
 setwd('.')
 
 #-------- Procedures
-#args <- commandArgs(trailingOnly = T)
-args <- c('2015110015219', '2015110022219', '2015110025219', '2015110032219', '2015110035219', '2015110042219', '2015110045219', '2015110052219', '2015110055219', '2015110062219', '2015110065219', '2015110072219', '2015110075219')
-setwd('/Volumes/SSD/PolariS/20150420/')
+args <- commandArgs(trailingOnly = T)
+#args <- c('2015110015219', '2015110022219', '2015110025219', '2015110032219', '2015110035219', '2015110042219', '2015110045219', '2015110052219', '2015110055219', '2015110062219', '2015110065219', '2015110072219', '2015110075219')
+#setwd('/Volumes/SSD/PolariS/20150420/')
 prefix <- args[1:length(args)]
 XPfname <- sprintf('%s.XP.Rdata', prefix[1])
 BPfname <- sprintf('%s.BP.Rdata', prefix[1])
