@@ -3,7 +3,7 @@ BINDIR = /usr/custom/bin
 #----------------- LINK OPTIONS -------------------
 CCOMPL=gcc $(CFLAGS)
 #------- Followings are PASS or DIRECTORY -------
-PROGS=	PolariSplit PolariBunch
+PROGS=	PolariBunch
 GRLIBS= -L/usr/X11R6/lib -lX11
 MATH=	-lm
 #----------------- MAPPING ------------------------

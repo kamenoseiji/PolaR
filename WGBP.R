@@ -14,6 +14,9 @@ scanGap <- function( XP, threshL, threshH, gapThresh ){
 	scanGap <- which( diff(WG_index) > gapThresh)
 	scanEnd <- c(WG_index[scanGap], max(WG_index))
 	scanStart <- c(min(WG_index), WG_index[scanGap+1])
+	availIndex <- which( scanEnd > scanStart)
+	scanStart <- scanStart[availIndex]
+	scanEnd <- scanEnd[availIndex]
 	scanNum <- length(scanStart); XPamp <- numeric(0)
 	for(scan_index in 1:scanNum){
 		scanRange <- scanStart[scan_index]:scanEnd[scan_index]

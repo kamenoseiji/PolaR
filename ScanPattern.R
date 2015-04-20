@@ -38,7 +38,8 @@ args <- commandArgs(trailingOnly = T)
 #args <- c('SAM45.TMCHC3N.as708fn.proj2.20150416115327', 'SAM45.TMCHC3N.as708fn.proj2.20150416123911', 'SAM45.TMCHC3N.as708fn.proj2.20150416135739', 'SAM45.TMCHC3N.as708fn.proj2.20150416145542')
 #setwd('/Volumes/SSD/PolariS/20150416/')
 prefix <- character(0)
-SAM45File <- args
+threshFile <- args[1]
+SAM45File <- args[2:length(args)]
 
 #-------- List prefix of PolariS data
 Year <- substr(strsplit(SAM45File[1], '\\.')[[1]][5], 1, 4)
@@ -57,7 +58,7 @@ for(index in 1:length(P00fileList)){
 #-------- Produce Scan data frame
 for(fileIndex in 1:length(SAM45File)){
 	cat(sprintf('Processing %s ...\n', SAM45File[fileIndex]))
-	tempScan <- scanPattern(SAM45File[fileIndex], prefix, IF_ID)
+	tempScan <- scanPattern(SAM45File[fileIndex], prefix, IF_ID, threshFile)
 	if(fileIndex == 1){	Scan <- tempScan}
 	else { Scan <- rbind(Scan, tempScan)}
 }

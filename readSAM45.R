@@ -179,7 +179,8 @@ readSAM45 <- function(fname){
 }
 
 #-------- Function to find Scan Pattern from SAM45 Log
-scanPattern <- function(SAM45File, prefix, IF_ID){
+scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
+	load(threshFile)
 	SAM45Log <- readSAM45(SAM45File)
 	head1 <- SAM45Log[[1]]; head2 <- SAM45Log[[2]]; SAM45spec <- SAM45Log[[3]]; SAM45df <- SAM45Log[[4]]
 	arrayIndex <- which(SAM45df$cary_name == SAM45df$cary_name[1])
@@ -206,7 +207,8 @@ scanPattern <- function(SAM45File, prefix, IF_ID){
 	for(IF_index in 1:length(IF_ID)){
 		tempPower <- numeric(0)
 		for(index in 1:PolarisFileNum){
-			tempPower <- append( tempPower, bitPower(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
+			# tempPower <- append( tempPower, bitPower(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
+			tempPower <- append( tempPower, bitThresh(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index]), Thresh[,IF_index]))
 		}
 		powerIF[[IF_index]] <- tempPower
 	}
@@ -234,6 +236,14 @@ gauss4bit <- function(bitDist){ return(gaussNbit(bitDist, 16)) }
 bitPower <- function(fname){
 	bitDist <- apply(readBitDist(fname), 2, bunchVec16)
 	gaussResults <- apply(bitDist, 2, gauss4bit)
+	return(1/gaussResults[1,]^2)
+}
+
+#-------- Function to estimage power using 256-level histogram
+bitThresh <- function(fname, thresh){
+	bitDist <- readBitDist(fname)
+	gThresh <- function(nsample){ return(gaussThresh(nsample, thresh)) }
+	gaussResults <- apply(bitDist, 2, gThresh)
 	return(1/gaussResults[1,]^2)
 }
 
