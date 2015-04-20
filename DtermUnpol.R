@@ -67,9 +67,18 @@ load(args[4])	 #Load BP file
 
 #
 #-------- Smoothed Delay and Phase
-delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25); delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.25)
-Re00Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis00), spar=0.25); Im00Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis00), spar=0.25)
-Re01Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis01), spar=0.25); Im01Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis01), spar=0.25)
+if( length(WG$mjdSec) > 3 ){
+    delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25); delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.25)
+    Re00Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis00), spar=0.25); Im00Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis00), spar=0.25)
+    Re01Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis01), spar=0.25); Im01Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis01), spar=0.25)
+} else {
+    delay00Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=WG$delay00));
+    delay01Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=WG$delay01));
+    Re00Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=Re(WG$Vis00)));
+    Im00Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=Im(WG$Vis00)));
+    Re01Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=Re(WG$Vis01)));
+    Im01Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=Im(WG$Vis01)));
+}
 #
 #-------- Initial Parameters
 chNum <- dim(on_A00)[1]

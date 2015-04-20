@@ -34,9 +34,9 @@ scanTsys <- function(Scan, Tamb){
 }
 
 #-------- Procedures
-# args <- commandArgs(trailingOnly = T)
-args <- c('2015110025219.Thresh.Rdata', 'SAM45.L1495B.as708fn.proj2.20150420111818')
-setwd('/Volumes/SSD/PolariS/20150420/')
+args <- commandArgs(trailingOnly = T)
+# args <- c('2015110025219.Thresh.Rdata', 'SAM45.L1495B.as708fn.proj2.20150420111818')
+# setwd('/Volumes/SSD/PolariS/20150420/')
 prefix <- character(0)
 threshFile <- args[1]
 SAM45File <- args[2:length(args)]
