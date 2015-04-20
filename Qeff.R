@@ -109,9 +109,10 @@ threshLevel <- function( nsample ){
 	for(level_index in 1:(nlevel-2)){
 		cumReal <- cumReal + c( rep(0, level_index), probReal[1:(nlevel - level_index - 1)])
 	}
+    thresh <- rep(Inf, (nlevel - 1))
 	tryCatch(
 		{ thresh <- (qnorm(cumReal) + gaussParam[2]) / gaussParam[1] },
-		warning = function(e){ thresh <- rep(NA, (nlevel-1)) },
+		warning = function(e){  },
 		silent = TRUE
 	)
 	return(thresh)
