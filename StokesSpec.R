@@ -9,6 +9,20 @@ eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/ma
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
 setwd('.')
 
+#-------- Parse command-line arguments
+parseArg <- function( args ){
+    argNum <- length(args)
+    fileNum <- argNum
+    smoothWidth <- 128      # Set Default Value
+    DtermFile   <- FALSE    # Set Default Value
+    for( index in 1:argNum ){
+        if(substr(args[index], 1,2) == "-S"){ smoothWidth <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
+        if(substr(args[index], 1,2) == "-D"){ DtermFile <- substring(args[index], 3);  fileNum <- fileNum - 1}
+    }
+    fileName <- args[(argNum - fileNum + 1):argNum]
+    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, fileName = fileName) )
+}
+
 #-------- ScanTime
 scanTime   <- function(MJD_df){ return((MJD_df[[1]] + MJD_df[[2]])/2 ) }
 scanIntegT <- function(MJD_df){ return( MJD_df[[2]] - MJD_df[[2]] + 1) }
@@ -121,17 +135,17 @@ deDopp <- function( spec, chShift ){
 }
 
 #-------- Load Spec and Scan data
-args <- commandArgs(trailingOnly = T)
+args <- parseArg(commandArgs(trailingOnly = T))
 setwd('.')
 #setwd('/Volumes/SSD/PolariS/20140417/')
 #args <- c('2014107013853.Scan.Rdata', '2014107013932.SPEC.Rdata', '2014107040319.Dcomb.Rdata', '2014107010610.WG.Rdata', '2014107010610.BP.Rdata')
 #args <- c('2015076052841.Scan.Rdata', '2015076052912.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 #args <- c('2015076043056.Scan.Rdata', '2015076043132.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
-load(args[1])	 #Load Scan file
-load(args[2])	 #Load SPEC file
-load(args[3])	 #Load D-term file
-load(args[4])	 #Load delay file
-load(args[5])	 #Load BP file
+load(args$fileName[1])	 #Load Scan file
+load(args$fileName[2])	 #Load SPEC file
+load(args$fileName[3])	 #Load delay file
+load(args$fileName[4])	 #Load BP file
+if(args$DtermFile != FALSE){ load(args$DtermFile)} else {D <- data.frame(XY02 = c(0+0i), XY13 = c(0+0i), Rxy02 = c(1.0), Rxy13 = c(1.0), Gxy02 = c(1.0), Gxy13 = c(1.0))}
 #
 #-------- Smoothed Delay and Phase
 delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25)
@@ -147,11 +161,12 @@ chRange <- floor(0.05*chNum):floor(0.95*chNum)
 freq <- (0:(chNum-1))/chNum* 4.0	# MHz
 chSep <- 4.0 / chNum
 #mitigCH <- c(7256, 16385, 32769, 47522)
-mitigCH <- c(16385)
-flagCH <- c(1, 2, 4, mitigCH)
+#mitigCH <- c(16385)
+mitigCH <- c(23359, 32769)
+flagCH <- unique(c(1, 2, 4, mitigCH))
 weight <- rep(1, chNum); weight[flagCH] <- 0.0
 # smoothWidth <- 512; knotNum <- floor(chNum / smoothWidth)
-smoothWidth <- 384; knotNum <- floor(chNum / smoothWidth)
+smoothWidth <- args$smoothWidth; knotNum <- floor(chNum / smoothWidth)
 #-------- Scan Pattern
 OnIndex <- which(Scan$scanType == 'ON')
 OfIndex <- which(Scan$scanType == 'OFF')
@@ -196,9 +211,9 @@ Tx13 <- TxCal(
 	DelayPhaseCal( BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit),
 	off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys03), weight, mitigCH)
 #-------- Doppler Tracking
-Ta00 <- deDopp(Ta00, chShift)
-Ta02 <- deDopp(Ta02, chShift)
-Tx02 <- deDopp(Tx02, chShift)
+#Ta00 <- deDopp(Ta00, chShift)
+#Ta02 <- deDopp(Ta02, chShift)
+#Tx02 <- deDopp(Tx02, chShift)
 #-------- Time Integration to determine Stokes spectrum
 weight0 <- 1.0 / Tsys00^2
 weight1 <- 1.0 / Tsys01^2
@@ -219,6 +234,6 @@ StokesV02 <- rowSums(Im(Tx02)* weight02)/sum(weight02) - Im(Dxy02)* StokesI02
 StokesV13 <- rowSums(Im(Tx13)* weight13)/sum(weight13) - Im(Dxy13)* StokesI13
 
 #-------- Save into file
-fileName <- sprintf("%s.STOKES.Rdata", strsplit(args[2], "\\.")[[1]][1])
+fileName <- sprintf("%s.STOKES.Rdata", strsplit(args$fileName[1], "\\.")[[1]][1])
 save(StokesI02, StokesI13, StokesQ02, StokesQ13, StokesU02, StokesU13, StokesV02, StokesV13, file=fileName)
 cat('Stokes spectra are saved into '); cat(fileName); cat('\n')
