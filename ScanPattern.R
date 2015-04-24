@@ -35,8 +35,8 @@ scanTsys <- function(Scan, Tamb){
 
 #-------- Procedures
 args <- commandArgs(trailingOnly = T)
-# args <- c('2015110025219.Thresh.Rdata', 'SAM45.L1495B.as708fn.proj2.20150420111818')
-# setwd('/Volumes/SSD/PolariS/20150420/')
+#args <- c('2015114041130.Thresh.Rdata', 'SAM45.S235.as708fn.proj2.20150424110741', 'SAM45.S235.as708fn.proj2.20150424112534')
+#setwd('/Users/kameno/SVDATA/20150424')
 prefix <- character(0)
 threshFile <- args[1]
 SAM45File <- args[2:length(args)]
@@ -66,13 +66,14 @@ for(fileIndex in 1:length(SAM45File)){
 Scan <- scanTsys(Scan, 280.0)
 #-------- Save
 StartUTC <- mjd2doy(Scan$mjdSec[1])
-fileName <- sprintf("%04d%03d%02d%02d%02d.Scan.Rdata", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
+filePrefix <- sprintf("%04d%03d%02d%02d%02d", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
+fileName <- sprintf("%s.Scan.Rdata", filePrefix)
 save(Scan, file=fileName)
 cat('Scan and Tsys records are saved into '); cat(fileName); cat('\n')
 #-------- Plot
 OnIndex <- which( Scan$scanType == 'ON')
 OfIndex <- which( Scan$scanType == 'OFF')
-pdf(sprintf('%s.tsys.pdf', prefix[1]))
+pdf(sprintf('%s.tsys.pdf', filePrefix))
 plotTsys( (Scan$mjdSec%%86400)/3600, Scan$Tsys00, OnIndex, OfIndex, list(Time='UT [hour]', Tsys='Tsys [K]', Title=sprintf('%s %s IF=%d', SAM45File[1], prefix[1], 0)))
 plotTsys( (Scan$mjdSec%%86400)/3600, Scan$Tsys01, OnIndex, OfIndex, list(Time='UT [hour]', Tsys='Tsys [K]', Title=sprintf('%s %s IF=%d', SAM45File[1], prefix[1], 1)))
 plotTsys( (Scan$mjdSec%%86400)/3600, Scan$Tsys02, OnIndex, OfIndex, list(Time='UT [hour]', Tsys='Tsys [K]', Title=sprintf('%s %s IF=%d', SAM45File[1], prefix[1], 2)))
