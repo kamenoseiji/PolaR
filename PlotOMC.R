@@ -91,9 +91,9 @@ fit <- lm(formula=z~1+x+y, data=data.frame(x=predStokesV[lineRange], y=predStoke
 summary(fit)
 plotX <- bunch_vec(freq[plotRange], plotBunch)
 plotY <- bunch_vec(StokesV[plotRange] - fit$coefficients[1] - fit$coefficients[3]* predStokesI[plotRange], plotBunch)
-plot( plotX, plotY , pch=20, ylim=c(-2.5e-1, 2.5e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main=sprintf('%s %s', args$srcName, args$lineName))
+plot( plotX, plotY , pch=20, ylim=c(-1.5e-1, 1.5e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main=sprintf('%s %s', args$srcName, args$lineName))
 arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
 lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predStokesV[plotRange]*fit$coefficients[2], fitBunch), col='red')
-legend(min(freq[plotRange]), 0.2, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][5]))
+legend(min(freq[plotRange]), 0.15, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][5]))
 
 dev.off()
