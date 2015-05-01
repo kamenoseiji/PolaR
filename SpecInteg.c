@@ -30,7 +30,6 @@ int	sod2hms(
 	return(sod - hms2sod(*hour, *min, *sec));
 }
 
-
 int	fileType( char	*fname)
 {
 	return(
@@ -47,24 +46,8 @@ int timeIntegReal(
     int     timeIndex, chIndex;
 
     for(timeIndex=0; timeIndex<timeNum; timeIndex++){
-        for(chIndex=0; chIndex<timeNum; chIndex++){
+        for(chIndex=0; chIndex<chNum; chIndex++){
             outData[chIndex] += inData[timeIndex* chNum + chIndex];
-        }
-    }
-    return(timeIndex);
-}
-
-int timeIntegComplex(
-    int     chNum,          // IN: Number of spectral channel
-    int     timeNum,        // IN: Number of time records to be integrated
-    float   *inData,        // IN: Pointer to input original data
-    float   *outData)       // OUT:Pointer to output integrated data)
-{
-    int     timeIndex, chIndex;
-    for(timeIndex=0; timeIndex<timeNum; timeIndex++){
-        for(chIndex=0; chIndex<timeNum; chIndex++){
-            outData[2* chIndex]     += inData[2* (timeIndex* chNum + chIndex)];
-            outData[2* chIndex + 1] += inData[2* (timeIndex* chNum + chIndex + 1)];
         }
     }
     return(timeIndex);
@@ -72,14 +55,15 @@ int timeIntegComplex(
 
 int	specTimeInteg(
 	char	*fname,			// IN: Input File Name
+	int		filetype,		// IN: 1->autocorr, 2->crosscorr
 	int		StartPP,		// IN: Rec# to start extract
 	int		EndPP,          // IN: Final Rec# to extract
     float   *outdata)		// OUT:Pointer to integrated spectral data
 {
 	FILE	*file_ptr;				// File Pointer
 	struct	SHM_PARAM	param;		// File Header
-	float	*recdata;				// Power spectrum data record
-	int		outSize, recSize;		// Original Record size [bytes]
+	float	*readdata;				// Power spectrum data record
+	int		readSize, outSize;		// Original Record size [bytes]
 	int		startSod, endSod;		// Start and End second of day
 	int		startH, startM, startS, endH, endM, endS;
 	int		integNum;
@@ -87,14 +71,14 @@ int	specTimeInteg(
 	//-------- Open File
 	if((file_ptr = fopen(fname, "r")) == NULL){ return(-1);}	// Open input file
 
-	//-------- Read and Write Header
+	//-------- Read file header
 	fread(&param, sizeof(struct SHM_PARAM), 1, file_ptr);
     integNum = EndPP - StartPP + 1; if(integNum < 1){   return(-1);}
-    outSize  = param.num_ch* sizeof(float);
-    recSize  = integNum* outSize;
-	if( recSize == 0 ){	perror("Unavailable Data Format"); return(-1);}
+    outSize  = filetype* param.num_ch* sizeof(float);
+    readSize  = integNum* outSize;
+	if( readSize == 0 ){	perror("Unavailable Data Format"); return(-1);}
 
-	recdata = malloc(recSize);
+	readdata = (float *)malloc(readSize);
 	startSod = hms2sod(param.hour, param.min, param.sec);
 	endSod = startSod + EndPP; startSod += StartPP;
 	sod2hms(startSod, &startH, &startM, &startS);
@@ -105,18 +89,18 @@ int	specTimeInteg(
 	fseek(file_ptr, StartPP* outSize, SEEK_CUR);
 
 	//-------- Read and Write Records
-	if(fread(recdata, recSize, 1, file_ptr) != 1){
+	if(fread(readdata, readSize, 1, file_ptr) != 1){
         printf("File Read Error [%s]\n", fname);
         return(-1);
     }
 	fclose(file_ptr);
 
     //-------- Time-integration
-    timeIntegReal(param.num_ch, integNum, recdata, outdata); 
+    timeIntegReal(filetype* param.num_ch, integNum, readdata, outdata); 
 	// fwrite(outdata, outSize, 1, file_out);
 	
 	//-------- Close File
-	free(recdata);
+	free(readdata);
 	return(integNum);
 }
 
@@ -139,19 +123,10 @@ int fileInteg(
     fread(&param, sizeof(struct SHM_PARAM), 1, file_ptr);
     fclose(file_ptr);
 
-    switch(filetype){
-        case 1:
-            outSize =  param.num_ch* sizeof(float);
-            outData = (float *)malloc( outSize );
-            specTimeInteg( fname, StartPP, EndPP, outData );    break;
-
-        case 2:
-            outSize =  2* param.num_ch* sizeof(float);
-            outData = (float *)malloc( outSize );
-            specTimeInteg( fname, StartPP, EndPP, outData );    break;
-
-        default:    printf("Invalid File Type!\n"); return(-1);
-    }
+    outSize = filetype * param.num_ch * sizeof(float);
+    if( outSize == 0){ printf("Invalid File Type!\n"); return(-1); }
+    outData = (float *)malloc( outSize ); memset(outData, 0, outSize);
+    specTimeInteg( fname, filetype, StartPP, EndPP, outData );
     printf("FileType=%d\n", filetype);
     printf("chnum=%d\n", param.num_ch);
 
@@ -166,7 +141,6 @@ int main(
 	int		argc,		// Number of Arguments
 	char	**argv)		// Pointer to Arguments
 {
-    // float   outData[65536];
 	if( argc < ARGNUM ){
 		printf("USAGE: SpecInteg [file name] [Start PP] [End PP] !!\n");
 		printf("  file name : input file name (e.g. 2014016154932.C.00)\n");
@@ -174,7 +148,6 @@ int main(
 		printf("  End   PP  : Final record number to extract\n");
 		exit(-1);
 	}
-	// specTimeInteg(argv[FNAME],  atoi(argv[STARTPP]), atoi(argv[ENDPP]), outData);
 	fileInteg(argv[FNAME], "hidoi.data", atoi(argv[STARTPP]), atoi(argv[ENDPP]));
 	return(0);
 }
