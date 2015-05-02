@@ -7,6 +7,29 @@ eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/ma
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/mjd.R", ssl.verifypeer = FALSE)))
 setwd('.')
+IntegCommand <- "/usr/custom/bin/SpecInteg"
+
+#-------- Function to Get PolariS file information
+GetChnumRecnum <- function(fname, postfix){
+    #-------- Read file header
+    file_ptr <- file(fname, "rb")
+    header <- readBin(file_ptr, what=integer(), size=4, n=32)
+    close(file_ptr)
+    #
+    #-------- PolariS Header Dictionary
+    head_size <- 128
+    numCH_index <- 16
+    numBit_index <- 11
+    chnum <- header[numCH_index]
+    levelnum <- 2^header[numBit_index]
+    byteperrec <- 0
+    if( postfix == 'A' ){   byteperrec <- 4* chnum }
+    if( postfix == 'C' ){   byteperrec <- 8* chnum }
+    if( postfix == 'P' ){   byteperrec <- 4*levelnum }
+    if( byteperrec == 0 ){    return(list(chnum=0, ipnum=0))}
+    file_size <- file.info(fname)$size - head_size
+    return( list(chnum=chnum, ipnum=file_size / byteperrec) )
+}
 #-------- Function to produce scan pattern
 scanSegment <- function( mjdSec ){
 	scanStart <- c(min(mjdSec), mjdSec[which(diff(mjdSec) > 1) + 1])
@@ -15,42 +38,49 @@ scanSegment <- function( mjdSec ){
 }
 
 #-------- Function to integrate spectra referring scan pattern
-integSegment <- function( prefix, postfix, IF_index, MJD ){
-	prevFileIndex  <- 0
+integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
+    #-------- Loop for Scan
 	for(scanIndex in 1:length(MJD[[1]])){
-		startFileIndex <- findPrefix(MJD[[1]][scanIndex], prefix)
-		endFileIndex   <- findPrefix(MJD[[2]][scanIndex], prefix)
-        fileName <- sprintf('%s.%s.%02d', prefix[startFileIndex], postfix, IF_index)
-		if( startFileIndex != prevFileIndex){
-			cat(sprintf('New P=%d S=%d E=%d : %s\n', prevFileIndex, startFileIndex, endFileIndex, fileName))
-			if( postfix == 'C'){
-				XP <- readPolariS_X(sprintf('%s.%s.%02d', prefix[startFileIndex], postfix, IF_index))
-			} else {
-				XP <- readPolariS(sprintf('%s.%s.%02d', prefix[startFileIndex], 'A', IF_index))
-			}
-		}
-		if( endFileIndex > startFileIndex){
-			cat(sprintf('Cont P=%d S=%d E=%d : %s\n', prevFileIndex, startFileIndex, endFileIndex, fileName))
-			if( postfix == 'C'){
-				temp <- readPolariS_X(sprintf('%s.%s.%02d', prefix[endFileIndex], postfix, IF_index))
-			} else {
-				temp <- readPolariS(sprintf('%s.%s.%02d', prefix[endFileIndex], 'A', IF_index))
-			}
-			cat( dim(XP)); cat(' '); cat(dim(temp))
-			XP <- cbind(XP, temp)
-		}
-		prevFileIndex <- startFileIndex
-		startIndex <- MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex]) + 1
-		stopIndex  <- MJD[[2]][scanIndex] - prefix2MJDsec(prefix[startFileIndex])
-		# stopIndex  <- MJD[[2]][scanIndex] - prefix2MJDsec(prefix[startFileIndex]) + 1
-		cat(sprintf("SCAN[%d]: MJD range=(%10.0f, %10.0f)  prefix-%s  scanRange=(%d, %d)\n", scanIndex, MJD[[1]][scanIndex], MJD[[2]][scanIndex], prefix[startFileIndex], startIndex, stopIndex))
-		if(scanIndex == 1){
-			spec <- apply(XP[,startIndex:stopIndex], 1, mean)
-		} else {
-			spec <- append(spec, apply(XP[,startIndex:stopIndex], 1, mean))
-		}
-	}
-	return(matrix(spec, ncol=length(MJD[[1]])))
+		startFileIndex <-findPrefix(MJD[[1]][scanIndex], prefix); endFileIndex <- findPrefix(MJD[[2]][scanIndex], prefix)
+        integSec <- MJD[[2]][scanIndex] - MJD[[1]][scanIndex] + 1
+        fileNum <- endFileIndex - startFileIndex + 1        # Number of files in the scan
+        cat(sprintf('Scan%d File=%d-%d integ=%d sec\n', 1, startFileIndex, endFileIndex, integSec))
+        #-------- Loop for file
+        fileCounter <- 0
+        remainingIntegSec <- integSec
+        spec <- numeric(0)
+        while( remainingIntegSec > 0 ){
+            startIndex <- max(0, MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex + fileCounter]) + 1)
+            stopIndex  <- min( startIndex + remainingIntegSec - 1, ipnum[startFileIndex] - 1)
+            fileName <- sprintf('%s.%s.%02d', prefix[startFileIndex + fileCounter], postfix, IF_index)
+            command_text <- sprintf('%s %s %d %d', IntegCommand, fileName, startIndex, stopIndex)
+		    cat(sprintf("SCAN[%d]: MJD range=(%10.0f, %10.0f)  prefix-%s  scanRange=(%d, %d)\n", scanIndex, MJD[[1]][scanIndex], MJD[[2]][scanIndex], prefix[startFileIndex], startIndex, stopIndex))
+            cat(command_text); cat('\n')
+            #-------- Throw time-integration process
+            system(command_text, wait=T)
+            remainingIntegSec <- remainingIntegSec - (stopIndex - startIndex + 1)
+            #-------- Read Time-integrated spectrum
+            file_size <- file.info('tmp.spec')$size
+            tmpSpec <- readBin('tmp.spec', what=numeric(), n=file_size/4, size=4)
+            if(postfix == 'C'){
+                even_index <- (0:(chnum-1))*2; odd_index <- even_index + 1; even_index <- odd_index + 1
+                tmpSpec <- complex(real = tmpSpec[odd_index], imaginary=tmpSpec[even_index])
+            }
+            if( fileCounter == 0 ){
+                singleScanSpec <- tmpSpec
+            } else {
+                singleScanSpec <- singleScanSpec + tmpSpec
+            }
+            fileCounter <- fileCounter + 1
+        }
+		if(scanIndex == 1){ multiScanSpec <- singleScanSpec / integSec }
+		if(scanIndex >  1){
+            multiScanSpec <- append(multiScanSpec, (singleScanSpec / integSec))
+            cat(sprintf('ScanIndex=%d : Current length of SPEC = %d\n', scanIndex, length(multiScanSpec)))
+        }
+    }
+    cat( length(MJD[[1]]) )
+	return(matrix(multiScanSpec, ncol=length(MJD[[1]])))
 }
 
 #-------- Procedures
@@ -67,21 +97,27 @@ OFF_index <- which(Scan$scanType == 'OFF');offMJD <- scanSegment(Scan$mjdSec[OFF
 #-------- List prefix of PolariS data
 Year <- mjd2doy(Scan$mjdSec[1])[[1]]
 P00fileList <- system(  sprintf('ls %s*.P.00', Year), intern=T )
+ipnum <- integer(length(P00fileList))
 for(index in 1:length(P00fileList)){
 	prefix[index] <- substr(P00fileList[index], 1, 13)
+    AfileSize <- GetChnumRecnum(sprintf('%s.A.00', prefix[index]), 'A')
+    ipnum[index] <- AfileSize$ipnum
 }
-postFix <- ''
-if(file.exists(sprintf('%s.C.%02dB', prefix[1], 0))){ postFix <- 'B' }
-chnum <- GetChNum(sprintf('%s.C.%02d%s', prefix[1], 0, postFix))
+chNum <- AfileSize$chnum
 #
 #-------- Integrate Segments
-on_C00 <- integSegment(prefix, 'C', 0, onMJD ); off_C00 <- integSegment(prefix, 'C', 0, offMJD ) # ; R_C00 <- integSegment(prefix, 'C', 0, RMJD )
-on_C01 <- integSegment(prefix, 'C', 1, onMJD ); off_C01 <- integSegment(prefix, 'C', 1, offMJD ) # ; R_C01 <- integSegment(prefix, 'C', 1, RMJD )
-on_A00 <- integSegment(prefix, 'A', 0, onMJD ); off_A00 <- integSegment(prefix, 'A', 0, offMJD ) # ; R_A00 <- integSegment(prefix, 'A', 0, RMJD )
-on_A01 <- integSegment(prefix, 'A', 1, onMJD ); off_A01 <- integSegment(prefix, 'A', 1, offMJD ) # ; R_A01 <- integSegment(prefix, 'A', 1, RMJD )
-on_A02 <- integSegment(prefix, 'A', 2, onMJD ); off_A02 <- integSegment(prefix, 'A', 2, offMJD ) # ; R_A02 <- integSegment(prefix, 'A', 2, RMJD )
-on_A03 <- integSegment(prefix, 'A', 3, onMJD ); off_A03 <- integSegment(prefix, 'A', 3, offMJD ) # ; R_A03 <- integSegment(prefix, 'A', 3, RMJD )
-
+on_C00  <- integSegment(prefix, chNum, ipnum, 'C', 0, onMJD )
+on_C01  <- integSegment(prefix, chNum, ipnum, 'C', 1, onMJD )
+on_A00  <- integSegment(prefix, chNum, ipnum, 'A', 0, onMJD )
+on_A01  <- integSegment(prefix, chNum, ipnum, 'A', 1, onMJD )
+on_A02  <- integSegment(prefix, chNum, ipnum, 'A', 2, onMJD )
+on_A03  <- integSegment(prefix, chNum, ipnum, 'A', 3, onMJD )
+off_C00 <- integSegment(prefix, chNum, ipnum, 'C', 0, offMJD )
+off_C01 <- integSegment(prefix, chNum, ipnum, 'C', 1, offMJD )
+off_A00 <- integSegment(prefix, chNum, ipnum, 'A', 0, offMJD )
+off_A01 <- integSegment(prefix, chNum, ipnum, 'A', 1, offMJD )
+off_A02 <- integSegment(prefix, chNum, ipnum, 'A', 2, offMJD )
+off_A03 <- integSegment(prefix, chNum, ipnum, 'A', 3, offMJD )
 #-------- Save into file
 StartUTC <- mjd2doy(min(Scan$mjdSec[ON_index]))
 fileName <- sprintf("%04d%03d%02d%02d%02d.SPEC.Rdata", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)

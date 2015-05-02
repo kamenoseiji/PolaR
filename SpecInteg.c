@@ -83,7 +83,7 @@ int	specTimeInteg(
 	endSod = startSod + EndPP; startSod += StartPP;
 	sod2hms(startSod, &startH, &startM, &startS);
 	sod2hms(endSod,   &endH,   &endM,   &endS);
-	printf("Integ %02d:%02d:%02d - %02d:%02d:%02d\n", startH, startM, startS, endH, endM, endS);
+	printf("SpecInteg.c: %02d:%02d:%02d - %02d:%02d:%02d\n", startH, startM, startS, endH, endM, endS);
 
 	//-------- Skip to the start position
 	fseek(file_ptr, StartPP* outSize, SEEK_CUR);
@@ -97,7 +97,6 @@ int	specTimeInteg(
 
     //-------- Time-integration
     timeIntegReal(filetype* param.num_ch, integNum, readdata, outdata); 
-	// fwrite(outdata, outSize, 1, file_out);
 	
 	//-------- Close File
 	free(readdata);
@@ -127,10 +126,8 @@ int fileInteg(
     if( outSize == 0){ printf("Invalid File Type!\n"); return(-1); }
     outData = (float *)malloc( outSize ); memset(outData, 0, outSize);
     specTimeInteg( fname, filetype, StartPP, EndPP, outData );
-    printf("FileType=%d\n", filetype);
-    printf("chnum=%d\n", param.num_ch);
 
-    save_ptr = fopen(fsave, "a");
+    save_ptr = fopen(fsave, "w");
     fwrite( outData, outSize, 1, save_ptr);
     fclose( save_ptr);
     free(outData);
@@ -148,6 +145,6 @@ int main(
 		printf("  End   PP  : Final record number to extract\n");
 		exit(-1);
 	}
-	fileInteg(argv[FNAME], "hidoi.data", atoi(argv[STARTPP]), atoi(argv[ENDPP]));
+	fileInteg(argv[FNAME], "tmp.spec", atoi(argv[STARTPP]), atoi(argv[ENDPP]));
 	return(0);
 }
