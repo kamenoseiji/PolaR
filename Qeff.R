@@ -100,8 +100,9 @@ gaussThresh <- function( nsample, Thresh ){
 
 #-------- Estimation of threshold voltages
 threshLevel <- function( nsample ){
-	nlevel <- 256
-	if(length(nsample) < nlevel){	return(-1)}		# Check input sample
+	# nlevel <- 256
+	# if(length(nsample) < nlevel){	return(-1)}		# Check input sample
+    nlevel <- length(nsample)
 	gaussParam <- gaussNbit(nsample, nlevel)[1:2]	# threshold and bias
 	probReal <- nsample / sum(nsample)				# Fraction at each level
 	#-------- Cumulative fraction

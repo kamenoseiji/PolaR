@@ -70,7 +70,7 @@ StokesI <- StokesI - mean(StokesI[baseRange])
 fitStokesI <- smooth.spline(freq, StokesI, w=weight, all.knots=F, nknots=4*knotNum)
 fitStokesQ <- smooth.spline(freq, StokesQ, w=weight, all.knots=F, nknots=4*knotNum)
 fitStokesU <- smooth.spline(freq, StokesU, w=weight, all.knots=F, nknots=4*knotNum)
-predStokesV <- predict(fitStokesI, (freq + 5e-6))$y - predict(fitStokesI, (freq - 5e-6))$y
+predStokesV <- predict(fitStokesI, (freq + 0.5e-6))$y - predict(fitStokesI, (freq - 0.5e-6))$y
 predStokesI <- predict(fitStokesI, freq)$y
 predStokesQ <- predict(fitStokesQ, freq)$y
 predStokesU <- predict(fitStokesU, freq)$y
@@ -84,6 +84,13 @@ lines( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(Stoke
 lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predict(fitStokesI, freq[plotRange])$y, fitBunch), col='orange')
 legend("topleft", legend=labels, col=cols, lty=rep(1,3))
 abline(h=0)
+#-------- Plot dI/df 
+plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(predStokesV[plotRange], plotBunch), type='s', xlab='Frequency [MHz]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
+maxDif <- max(predStokesV[plotRange]); maxFreq <- freq[plotRange[which.max(predStokesV[plotRange])]] 
+minDif <- min(predStokesV[plotRange]); minFreq <- freq[plotRange[which.min(predStokesV[plotRange])]] 
+text( maxFreq, maxDif, sprintf('%5.2e K/Hz at %4.2f MHz', maxDif, maxFreq), cex=0.3, pos=4)
+text( minFreq, minDif, sprintf('%5.2e K/Hz at %4.2f MHz', minDif, minFreq), cex=0.3, pos=4)
+abline(h=0)
 #-------- Plot Stokes V 
 plotBunch <- 64
 err <- sd(StokesV02[SDrange]) / sqrt(plotBunch)
@@ -94,6 +101,6 @@ plotY <- bunch_vec(StokesV[plotRange] - fit$coefficients[1] - fit$coefficients[3
 plot( plotX, plotY , pch=20, ylim=c(-1.5e-1, 1.5e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main=sprintf('%s %s', args$srcName, args$lineName))
 arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
 lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predStokesV[plotRange]*fit$coefficients[2], fitBunch), col='red')
-legend(min(freq[plotRange]), 0.15, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][5]))
+legend(min(freq[plotRange]), 0.15, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', fit[[1]][2], summary(fit)[[4]][5]))
 
 dev.off()
