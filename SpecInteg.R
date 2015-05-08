@@ -5,7 +5,7 @@
 library(RCurl)
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readSAM45.R", ssl.verifypeer = FALSE)))
 eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/mjd.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date", ssl.verifypeer = FALSE)))
 setwd('.')
 IntegCommand <- "/usr/custom/bin/SpecInteg"
 

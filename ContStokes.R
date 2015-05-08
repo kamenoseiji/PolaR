@@ -2,8 +2,8 @@
 # usage: Rscript ContStokes.R [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
 #
 library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/mjd.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/delaysearch.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/PolariCalib", ssl.verifypeer = FALSE)))
 setwd('.')
 options(digits = 4)
 #-------- ScanTime

@@ -2,64 +2,18 @@
 # usage: Rscript ContStokes.R [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
 #
 library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/mjd.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/delaysearch.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/PolariCalib.R", ssl.verifypeer = FALSE)))
 setwd('.')
 options(digits = 4)
 #-------- ScanTime
 scanTime   <- function(MJD_df){ return((MJD_df[[1]] + MJD_df[[2]])/2 ) }
 scanIntegT <- function(MJD_df){ return( MJD_df[[2]] - MJD_df[[2]] + 1) }
 
-#-------- BP Cal
-BPphsCal <- function( SPEC, BP ){
-	BPphs <- complex( modulus=1, argument=-Arg(BP))
-	return( SPEC* BPphs )
-}
-
-#-------- Function to Calibrate Delay and Phase
-DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
-	temp <- scanSpec
-	phase <- atan2(predict(ImFit, mjdSec)$y, predict(ReFit, mjdSec)$y)
-	delay <- predict(delayFit, mjdSec)$y
-	for(timeIndex in 1:ncol(scanSpec)){
-		scanSpec[,timeIndex] <- delayPhase_cal(temp[,timeIndex], delay[timeIndex], -phase[timeIndex])
-	}
-	return(scanSpec)
-}
-
-#-------- On - Off subtraction for total power
-TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
-	if( length(OffTime) > 3){
-		basePower <- predict(smooth.spline( OffTime, OffPower, spar=0.5 ), OnTime)$y
-	} else {
-		basePower <- rep(mean(OffPower),  length(OnTime))
-	}
-	baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.5 ), OnTime)$y
-	return(baseTsys* (OnPower - basePower) / basePower)
-}
-
-#-------- On - Off subtraction for complex power
-TxCal <- function(OnXpower, OffXpower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
-	if( length(OffTime) > 3){
-		baseXpower <- complex(
-			real = predict(smooth.spline( OffTime, Re(OffXpower), spar=0.5 ), OnTime)$y,
-			imaginary = predict(smooth.spline( OffTime, Im(OffXpower), spar=0.5 ), OnTime)$y )
-		basePower <- predict(smooth.spline( OffTime, OffPower, spar=0.5 ), OnTime)$y
-	} else {
-		baseXpower <- rep( mean(OffXpower), length(OnTime))
-		basePower <- rep(mean(OffPower),  length(OnTime))
-	}
-	baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.5 ), OnTime)$y
-	return(baseTsys* (OnXpower - baseXpower) / basePower)
-}
 
 #-------- Load Spec and Scan data
 args <- commandArgs(trailingOnly = T)
 setwd('.')
-#setwd('/Volumes/SSD/PolariS/20140417/')
-#args <- c('2014107024416.Scan.Rdata', '2014107024452.SPEC.Rdata', '2014107010610.WG.Rdata', '2014107010610.BP.Rdata')
-#setwd('/Volumes/SSD/PolariS/20150317/')
-#args <- c('2015076095603.Scan.Rdata', '2015076095635.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 load(args[1])	 #Load Scan file
 load(args[2])	 #Load SPEC file
 load(args[3])	 #Load delay file

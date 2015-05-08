@@ -1,5 +1,6 @@
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
+########
+# To use readSAM45.R, apply source('date.R') in advance.
+#
 #-------- Constants
 ARYMAX <- 32	# アレイ数の最大値
 BINMAX <- 4		# ビン分割の最大値

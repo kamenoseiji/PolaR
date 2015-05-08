@@ -102,6 +102,7 @@ gaussThresh <- function( nsample, Thresh ){
 threshLevel <- function( nsample ){
 	# nlevel <- 256
 	# if(length(nsample) < nlevel){	return(-1)}		# Check input sample
+    nsample <- as.numeric(nsample)
     nlevel <- length(nsample)
 	gaussParam <- gaussNbit(nsample, nlevel)[1:2]	# threshold and bias
 	probReal <- nsample / sum(nsample)				# Fraction at each level
