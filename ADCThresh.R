@@ -3,10 +3,15 @@
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
 RPATH <- '~/Programs/PolaR'
-source(sprintf('%s/loadModule.R', RPATH))
-
 FuncList <- c('readSAM45', 'readPolariS', 'Qeff')
-Err <- try(loadGitHub( FuncList ), silent=FALSE)
+source(sprintf('%s/loadModule.R', RPATH))
+library(RCurl)
+
+funcNum <- length(FuncList)
+for( index in 1:funcNum){
+    URL <- sprintf("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/%s.R", FuncList[index])
+    Err <- try( eval(parse(text = getURL(URL, ssl.verifypeer = FALSE))), silent=FALSE)
+}   
 if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 
 setwd('.')

@@ -5,9 +5,15 @@
 RPATH <- '~/Programs/PolaR'
 FuncList <- c('readPolariS', 'date', 'PolariCalib')
 source(sprintf('%s/loadModule.R', RPATH))
+library(RCurl)
 
-Err <- try(loadGitHub( FuncList ), silent=FALSE)
+funcNum <- length(FuncList)
+for( index in 1:funcNum){
+    URL <- sprintf("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/%s.R", FuncList[index])
+    Err <- try( eval(parse(text = getURL(URL, ssl.verifypeer = FALSE))), silent=FALSE)
+}   
 if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
+setwd('.')
 
 #-------- Function to filter WG scans
 scanGap <- function( XP, threshL, threshH, gapThresh ){

@@ -6,6 +6,7 @@ loadGitHub <- function( FuncTions ){
     for( index in 1:funcNum){
         URL <- sprintf("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/%s.R", FuncTions[index])
         eval(parse(text = getURL(URL, ssl.verifypeer = FALSE)))
+        cat(sprintf('Load %s  from GitHub.', URL)); cat('\n')
     }
     cat('Succeeded to load modules from GitHub.'); cat('\n')
     return()
