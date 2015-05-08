@@ -2,10 +2,13 @@
 # usage: Rscript WGScan.R [list of prefix]
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/plotTool.R", ssl.verifypeer = FALSE)))
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('readPolariS', 'date', 'plotTool')
+source(sprintf('%s/loadModule.R', RPATH))
+
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
+
 setwd('.')
 #-------- Function to find Scan Pattern from SAM45 Log
 scanXP <- function(prefix){

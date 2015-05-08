@@ -2,10 +2,13 @@
 # usage: Rscript ADCThresh.R prefix
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readSAM45.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/Qeff.R", ssl.verifypeer = FALSE)))
+RPATH <- '~/Programs/PolaR'
+source(sprintf('%s/loadModule.R', RPATH))
+
+FuncList <- c('readSAM45', 'readPolariS', 'Qeff')
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
+
 setwd('.')
 
 #-------- Procedures

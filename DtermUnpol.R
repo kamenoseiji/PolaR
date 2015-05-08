@@ -1,9 +1,13 @@
 # ContStokes.R
 # usage: Rscript ContStokes.R [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
 #
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/PolariCalib.R", ssl.verifypeer = FALSE)))
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('date', 'PolariCalib')
+source(sprintf('%s/loadModule.R', RPATH))
+
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
+
 setwd('.')
 options(digits = 4)
 #-------- ScanTime

@@ -1,12 +1,12 @@
 # StokeSpec
 # usage: Rscript StokesSpec [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
 #
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/Qeff.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/PolariCalib.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readSAM45.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('readPolariS', 'readSAM45', 'date', 'Qeff', 'PolariCalib')
+source(sprintf('%s/loadModule.R', RPATH))
+
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 setwd('.')
 
 #-------- Parse command-line arguments

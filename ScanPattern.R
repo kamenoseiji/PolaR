@@ -2,12 +2,13 @@
 # usage: Rscript ScanPattern.R [Number of SAM45 file] [list of SAM45 file]
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readSAM45.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/Qeff.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/plotTool.R", ssl.verifypeer = FALSE)))
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('readSAM45', 'readPolariS', 'Qeff', 'date', 'plotTool')
+source(sprintf('%s/loadModule.R', RPATH))
+
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
+
 setwd('.')
 #-------- Function to calculate Tsys from Scan Pattern
 scanTsys <- function(Scan, Tamb){

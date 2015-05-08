@@ -1,12 +1,13 @@
 # WGBP.R : Generate complex bandpass table using WG scan
 # usage: Rscript WGBP.R [lower_thresh] [upper_thresh] [prefix list]
 # e.g. Rscript WGBP.R 15 2014107010610 2014107013610 2014107020610 2014107023610 2014107030610 2014107033610 2014107040610 2014107043610 2014107050610 2014107053610 2014107060610 2014107063610 2014107070610 2014107073610 2014107080610 2014107083610 2014107090610
- 
-#
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date.R", ssl.verifypeer = FALSE)))
-setwd('.')
+
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('readPolariS', 'date', 'PolariCalib')
+source(sprintf('%s/loadModule.R', RPATH))
+
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 
 #-------- Function to filter WG scans
 scanGap <- function( XP, threshL, threshH, gapThresh ){

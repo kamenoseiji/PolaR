@@ -1,30 +1,39 @@
-#2015110015209rse command-line arguments
-parseArg <- function( args ){
-    argNum <- length(args)
-    fileNum <- argNum
-    smoothWidth <- 128      # Set Default Value
-    DtermFile   <- FALSE    # Set Default Value
-    for( index in 1:argNum ){
-        if(substr(args[index], 1,2) == "-S"){ smoothWidth <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
-        if(substr(args[index], 1,2) == "-D"){ DtermFile <- substring(args[index], 3);  fileNum <- fileNum - 1}
-    }
-    fileName <- args[(argNum - fileNum + 1):argNum]
-    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, fileName = fileName) )
-                                                }StokeSpec
+# StokeSpec
 # usage: Rscript StokesSpec [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
 #
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
+#-------- Parse command-line arguments
+parseArg <- function( args ){
+    argNum <- length(args)
+    lineFreq <- c(1.6, 1.7)
+    plotFreq <- c(1.6, 1.7)
+    for( index in 1:argNum ){
+        if(substr(args[index], 1,2) == "-l"){ lineFreq[1] <- as.numeric(substring(args[index], 3))}
+        if(substr(args[index], 1,2) == "-L"){ lineFreq[2] <- as.numeric(substring(args[index], 3))}
+        if(substr(args[index], 1,2) == "-p"){ plotFreq[1] <- as.numeric(substring(args[index], 3))}
+        if(substr(args[index], 1,2) == "-P"){ plotFreq[2] <- as.numeric(substring(args[index], 3))}
+        if(substr(args[index], 1,2) == "-I"){ IF <- as.integer(substring(args[index], 3))}
+        if(substr(args[index], 1,2) == "-S"){ srcName <- substring(args[index], 3)}
+        if(substr(args[index], 1,2) == "-M"){ lineName <- substring(args[index], 3)}
+    }
+    fileName <- args[argNum]
+    return( list(lineFreq = lineFreq, plotFreq = plotFreq, srcName = srcName, lineName = lineName, fileName = fileName, IF = IF) )
+}
 
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('PolariCalib')
+source(sprintf('%s/loadModule.R', RPATH))
+
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 
 setwd('.')
 #-------- Load Spec and Scan data
-args <- commandArgs(trailingOnly = T)
+args <- parseArg(commandArgs(trailingOnly = T))
 setwd('.')
 #setwd('/Volumes/SSD/PolariS/20150317/')
 #args <- c('2015076052841.Scan.Rdata', '2015076052912.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 #args <- c('2015076043056.Scan.Rdata', '2015076043132.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
-load(args[1])	 #Load Stokes file
+load(args$fileName)	 #Load Stokes file
 # freq_track <- 45379033000 # [Hz]
 # freq_center <- c(45490316000, 45379033000, 45490316000, 45379033000)
 # freq_IF <- 5208	# [MHz]
@@ -39,67 +48,64 @@ freq <- (0:(chNum-1))/chNum* 4.0	# MHz
 # veloc0 <- (2.0 - freq)*1.0e6 /  freq_center[1] * 299792458 + 
 chSep <- 4.0 / chNum
 weight <- rep(0, chNum); weight[chRange] = 1.0
-smoothWidth <- 384; knotNum <- floor(chNum / smoothWidth)
+smoothWidth <- 256; knotNum <- floor(chNum / smoothWidth)
 #-------- Save into file
-PDFfilename <- sprintf("%s.Zeeman.pdf", strsplit(args[1], "\\.")[[1]][1])
-#-------- Plot Stokes I for HC3N
+PDFfilename <- sprintf("%s.Zeeman.%d.pdf", strsplit(args$fileName, "\\.")[[1]][1], args$IF)
+if(args$IF == 2){
+    StokesI <- StokesI13
+    StokesQ <- StokesQ13
+    StokesU <- StokesU13
+    StokesV <- StokesV13
+} else {
+    StokesI <- StokesI02
+    StokesQ <- StokesQ02
+    StokesU <- StokesU02
+    StokesV <- StokesV02
+}
+#-------- Plot Stokes I 
 pdf(PDFfilename)
-#plotFreq <- c(2.0, 2.5) # range in MHz
-#lineFreq <- c(2.15, 2.4)
-plotFreq <- c(1.3, 1.7) # range in MHz
-lineFreq <- c(1.45, 1.55)
-#plotFreq <- c(0.1, 0.5)
-#lineFreq <- c(0.25, 0.35)
-#plotFreq <- c(3.4, 3.7)
-#lineFreq <- c(3.5, 3.62)
-#plotFreq <- c(1.5, 1.9) # range in MHz
-#lineFreq <- c(1.6, 1.75)
+plotFreq <- args$plotFreq # range in MHz
+lineFreq <- args$lineFreq
+baseFreq <- c(plotFreq[1], lineFreq[1], lineFreq[2], plotFreq[2])
 plotRange <- which.min(abs(freq - plotFreq[1])):which.min(abs(freq - plotFreq[2]))
 lineRange <- which.min(abs(freq - lineFreq[1])):which.min(abs(freq - lineFreq[2]))
-fitStokesI <- smooth.spline(freq, StokesI02, w=weight, all.knots=F, nknots=4*knotNum)
-predStokesV <- predict(fitStokesI, (freq + 5e-6))$y - predict(fitStokesI, (freq - 5e-6))$y
+baseRange <- c(which.min(abs(freq - baseFreq[1])):which.min(abs(freq - baseFreq[2])), which.min(abs(freq - baseFreq[3])):which.min(abs(freq - baseFreq[4])))
+StokesI <- StokesI - mean(StokesI[baseRange])
+StokesI <- StokesI - mean(StokesI[baseRange])
+fitStokesI <- smooth.spline(freq, StokesI, w=weight, all.knots=F, nknots=4*knotNum)
+fitStokesQ <- smooth.spline(freq, StokesQ, w=weight, all.knots=F, nknots=4*knotNum)
+fitStokesU <- smooth.spline(freq, StokesU, w=weight, all.knots=F, nknots=4*knotNum)
+predStokesV <- predict(fitStokesI, (freq + 0.5e-6))$y - predict(fitStokesI, (freq - 0.5e-6))$y
 predStokesI <- predict(fitStokesI, freq)$y
+predStokesQ <- predict(fitStokesQ, freq)$y
+predStokesU <- predict(fitStokesU, freq)$y
 plotBunch <- 32
 fitBunch  <- 8
-plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesI02[plotRange], plotBunch), type='s', xlab='Frequency [MHz]', ylab='Stokes I [K]', main='L1495B CCS')
-lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predict(fitStokesI, freq[plotRange])$y, fitBunch), col='red')
-#-------- Plot Stokes V for HC3N
+cols   <- c('black', 'blue', 'green')
+labels <- c('I', 'Q', 'U')
+plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesI[plotRange], plotBunch), type='s', xlab='Frequency [MHz]', ylab='Stokes I [K]', main=sprintf('%s %s', args$srcName, args$lineName))
+lines( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesQ[plotRange], plotBunch), type='s', col=cols[2])
+lines( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesU[plotRange], plotBunch), type='s', col=cols[3])
+lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predict(fitStokesI, freq[plotRange])$y, fitBunch), col='orange')
+legend("topleft", legend=labels, col=cols, lty=rep(1,3))
+abline(h=0)
+#-------- Plot dI/df 
+plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(predStokesV[plotRange], plotBunch), type='s', xlab='Frequency [MHz]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
+maxDif <- max(predStokesV[plotRange]); maxFreq <- freq[plotRange[which.max(predStokesV[plotRange])]] 
+minDif <- min(predStokesV[plotRange]); minFreq <- freq[plotRange[which.min(predStokesV[plotRange])]] 
+text( maxFreq, maxDif, sprintf('%5.2e K/Hz at %4.2f MHz', maxDif, maxFreq), cex=0.3, pos=4)
+text( minFreq, minDif, sprintf('%5.2e K/Hz at %4.2f MHz', minDif, minFreq), cex=0.3, pos=4)
+abline(h=0)
+#-------- Plot Stokes V 
 plotBunch <- 64
 err <- sd(StokesV02[SDrange]) / sqrt(plotBunch)
-fit <- lm(formula=z~1+x+y, data=data.frame(x=predStokesV[lineRange], y=predStokesI[lineRange], z=StokesV02[lineRange]))
+fit <- lm(formula=z~1+x+y, data=data.frame(x=predStokesV[lineRange], y=predStokesI[lineRange], z=StokesV[lineRange]))
 summary(fit)
 plotX <- bunch_vec(freq[plotRange], plotBunch)
-plotY <- bunch_vec(StokesV02[plotRange] - fit$coefficients[3]* predStokesI[plotRange] - fit$coefficients[1], plotBunch)
-plot( plotX, plotY , pch=20, ylim=c(-1e-1, 1e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main='L1495B CCS')
+plotY <- bunch_vec(StokesV[plotRange] - fit$coefficients[1] - fit$coefficients[3]* predStokesI[plotRange], plotBunch)
+plot( plotX, plotY , pch=20, ylim=c(-1.5e-1, 1.5e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main=sprintf('%s %s', args$srcName, args$lineName))
 arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
 lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predStokesV[plotRange]*fit$coefficients[2], fitBunch), col='red')
-legend(min(freq[plotRange]), 0.1, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][5]))
+legend(min(freq[plotRange]), 0.15, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', fit[[1]][2], summary(fit)[[4]][5]))
 
-#-------- Plot Stokes I for CCS
-#plotFreq <- c(1.8, 2.2) # range in MHz
-#lineFreq <- c(1.92, 2.1)
-plotFreq <- c(1.4, 1.9) # range in MHz
-lineFreq <- c(1.5, 1.75)
-#plotFreq <- c(1.5, 1.9) # range in MHz
-#lineFreq <- c(1.6, 1.75)
-plotRange <- which.min(abs(freq - plotFreq[1])):which.min(abs(freq - plotFreq[2]))
-lineRange <- which.min(abs(freq - lineFreq[1])):which.min(abs(freq - lineFreq[2]))
-fitStokesI <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=4*knotNum)
-predStokesV <- predict(fitStokesI, (freq + 5e-6))$y - predict(fitStokesI, (freq - 5e-6))$y
-predStokesI <- predict(fitStokesI, freq)$y
-plotBunch <- 32
-plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesI13[plotRange], plotBunch), type='s', xlab='Frequency [MHz]', ylab='Stokes I [K]', main='L1495B HC3N')
-lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predict(fitStokesI, freq[plotRange])$y, fitBunch), col='red')
-#-------- Plot Stokes V for CCS
-plotBunch <- 64
-err <- sd(StokesV13[SDrange]) / sqrt(plotBunch)
-fit <- lm( formula=z~1+x+y, data=data.frame(x=predStokesV[lineRange], y=predStokesI[lineRange], z=StokesV13[lineRange]))
-summary(fit)
-plotX <- bunch_vec(freq[plotRange], plotBunch)
-plotY <- bunch_vec(StokesV13[plotRange] - fit$coefficients[3]* predStokesI[plotRange] - fit$coefficients[1], plotBunch)
-plot( plotX, plotY , pch=20, ylim=c(-1.0e-1, 1.0e-1), xlab='Frequency [MHz]', ylab='Stokes V [K]', main='L1495B HC3N')
-arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
-lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predStokesV[plotRange]*fit$coefficients[2], fitBunch), col='red')
-legend(min(freq[plotRange]), 0.1, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', 10*fit[[1]][2], 10*summary(fit)[[4]][5]))
 dev.off()
-

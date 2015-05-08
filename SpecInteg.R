@@ -2,10 +2,13 @@
 # usage: Rscript SpecInteg.R [Scan.Rdata file name]
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
-library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readSAM45.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/readPolariS.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date", ssl.verifypeer = FALSE)))
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('readSAM45', 'readPolariS', 'date')
+source(sprintf('%s/loadModule.R', RPATH))
+
+Err <- try(loadGitHub( FuncList ), silent=FALSE)
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
+
 setwd('.')
 IntegCommand <- "/usr/custom/bin/SpecInteg"
 
