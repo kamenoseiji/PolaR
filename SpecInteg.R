@@ -58,8 +58,10 @@ integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
         remainingIntegSec <- integSec
         spec <- numeric(0)
         while( remainingIntegSec > 0 ){
-            startIndex <- max(0, MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex + fileCounter]) + 1)
-            stopIndex  <- min( startIndex + remainingIntegSec - 1, ipnum[startFileIndex] - 1)
+            #startIndex <- max(0, MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex + fileCounter]) + 1)
+            #stopIndex  <- min( startIndex + remainingIntegSec - 1, ipnum[startFileIndex] - 1)
+            startIndex <- max(0, MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex + fileCounter]))
+            stopIndex  <- min( startIndex + remainingIntegSec - 2, ipnum[startFileIndex] - 2)
             fileName <- sprintf('%s.%s.%02d', prefix[startFileIndex + fileCounter], postfix, IF_index)
             command_text <- sprintf('%s %s %d %d', IntegCommand, fileName, startIndex, stopIndex)
 		    cat(sprintf("SCAN[%d]: MJD range=(%10.0f, %10.0f)  prefix-%s  scanRange=(%d, %d)\n", scanIndex, MJD[[1]][scanIndex], MJD[[2]][scanIndex], prefix[startFileIndex], startIndex, stopIndex))
