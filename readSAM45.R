@@ -208,7 +208,8 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 	for(IF_index in 1:length(IF_ID)){
 		tempPower <- numeric(0)
 		for(index in 1:PolarisFileNum){
-			tempPower <- append( tempPower, bitThresh(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index]), Thresh[,IF_index]))
+			# tempPower <- append( tempPower, bitThresh(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index]), Thresh[,IF_index]))
+			tempPower <- append( tempPower, Apower(sprintf("%s.A.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
 		}
 		powerIF[[IF_index]] <- tempPower
 	}
@@ -245,5 +246,11 @@ bitThresh <- function(fname, thresh){
 	gThresh <- function(nsample){ return(gaussThresh(nsample, thresh)) }
 	gaussResults <- apply(bitDist, 2, gThresh)
 	return(1/gaussResults[1,]^2)
+}
+#-------- Function to estimate power using autocorrelation
+Apower <- function(fname, thresh)
+	A <- readPolariS(fname)
+	chNum <- nrow(A); chRange <- floor(0.05*chNum):floor(0.95*chNum)
+	return( apply(A[chRange,], 2, mean))
 }
 
