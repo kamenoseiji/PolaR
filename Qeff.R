@@ -73,7 +73,6 @@ gaussThresh <- function( nsample, Thresh ){
 	a <- initGaussNbit(prob, levelNum)							# Initial Value
 	
 	niter <- 0
-    cat(nsample); cat('\n')
 	while(niter < 10){									# Max iterations = 10
 		resid <- prob - probThresh( a, Thresh )			# Residual from trial
 		
@@ -101,8 +100,6 @@ gaussThresh <- function( nsample, Thresh ){
 
 #-------- Estimation of threshold voltages
 threshLevel <- function( nsample ){
-	# nlevel <- 256
-	# if(length(nsample) < nlevel){	return(-1)}		# Check input sample
     nsample <- as.numeric(nsample)
     nlevel <- length(nsample)
 	gaussParam <- gaussNbit(nsample, nlevel)[1:2]	# threshold and bias
