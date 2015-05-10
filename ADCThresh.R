@@ -35,7 +35,8 @@ Thresh <- matrix( nrow=ThreshNum, ncol=length(IF_ID))
 for(if_index in 1:length(IF_ID)){
     readFile <- sprintf("%s.P.%02d", prefix, IF_ID[if_index])
 	levelHisto <- matrix(readBitDist(readFile), nrow=LevelNum)
-	threshHolds <- apply(levelHisto, 2, threshLevel)
+	avail_index <- which( levelHisto[1,] > 0.9* max(levelHisto[1,]))
+	threshHolds <- apply(levelHisto[,avail_index], 2, threshLevel)
 	avail_index <- which((colSums(is.infinite(threshHolds)) + colSums(is.na(threshHolds))) == 0)
 	if(length(avail_index) == 0){ cat(sprintf("Warning: No available data in %s.P.%02d\n", prefix, IF_ID[if_index]))}
 	Thresh[,if_index] <- apply(threshHolds[,avail_index], 1, mean)

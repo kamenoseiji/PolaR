@@ -73,6 +73,7 @@ gaussThresh <- function( nsample, Thresh ){
 	a <- initGaussNbit(prob, levelNum)							# Initial Value
 	
 	niter <- 0
+    cat(nsample); cat('\n')
 	while(niter < 10){									# Max iterations = 10
 		resid <- prob - probThresh( a, Thresh )			# Residual from trial
 		
@@ -85,7 +86,7 @@ gaussThresh <- function( nsample, Thresh ){
 		t_p_W <- t(p) %*% W
 		
 		#-------- Solution
-		solution <- solve( t_p_W %*% p )
+        solution <- solve( t_p_W %*% p )
 		correction <- solution %*% (t_p_W %*% resid)
 		
 		#-------- Correction
@@ -107,10 +108,10 @@ threshLevel <- function( nsample ){
 	gaussParam <- gaussNbit(nsample, nlevel)[1:2]	# threshold and bias
 	probReal <- nsample / sum(nsample)				# Fraction at each level
 	#-------- Cumulative fraction
-	cumReal <- probReal[1:(nlevel-1)]
-	for(level_index in 1:(nlevel-2)){
-		cumReal <- cumReal + c( rep(0, level_index), probReal[1:(nlevel - level_index - 1)])
-	}
+	M <- matrix( rep(1, (nlevel - 1)^2 ), (nlevel - 1), (nlevel - 1))
+	M[upper.tri(M, diag=F)] <- 0
+	cumReal <- M %*% probReal[1:(nlevel - 1)]
+	#-------- Thresholds
     thresh <- rep(Inf, (nlevel - 1))
 	tryCatch(
 		{ thresh <- (qnorm(cumReal) + gaussParam[2]) / gaussParam[1] },
