@@ -14,7 +14,7 @@ for( index in 1:funcNum){
 if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 
 setwd('.')
-options(digits = 4)
+options(digits = 3)
 #-------- ScanTime
 scanTime   <- function(MJD_df){ return((MJD_df[[1]] + MJD_df[[2]])/2 ) }
 scanIntegT <- function(MJD_df){ return( MJD_df[[2]] - MJD_df[[2]] + 1) }
@@ -79,5 +79,3 @@ D
 fileName <- sprintf("%s.Dterm.Rdata", strsplit(args[2], "\\.")[[1]][1])
 save(D, file=fileName)
 cat(sprintf('D-term is saved into %s\n', fileName))
-
-

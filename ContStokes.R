@@ -135,24 +135,24 @@ EL <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$EL[OnIndex], spar=0.5), s
 Pang <- -azel2pa(AZ, EL) + EL*pi/180 - pi/2 
 #-------- Correlation -> Stokes Parameters
 if( length( scanTime(onMJD) ) > 3){
-	uncalStokes00 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta00, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta02, spar=0.8), scanTime(onMJD))$y, Tx02, Dxy02, Pang)
-	uncalStokes01 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta01, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta03, spar=0.8), scanTime(onMJD))$y, Tx13, Dxy13, Pang)
+	Stokes00 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta00, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta02, spar=0.8), scanTime(onMJD))$y, Tx02, Dxy02, Pang)
+	Stokes01 <- corr2Stokes( predict(smooth.spline(scanTime(onMJD), Ta01, spar=0.8), scanTime(onMJD))$y, predict(smooth.spline(scanTime(onMJD), Ta03, spar=0.8), scanTime(onMJD))$y, Tx13, Dxy13, Pang)
 } else {
-	uncalStokes00 <- corr2Stokes(Ta00, Ta02, Tx02, Dxy02, Pang)
-	uncalStokes01 <- corr2Stokes(Ta01, Ta03, Tx13, Dxy13, Pang)
+	Stokes00 <- corr2Stokes(Ta00, Ta02, Tx02, Dxy02, Pang)
+	Stokes01 <- corr2Stokes(Ta01, Ta03, Tx13, Dxy13, Pang)
 }
 
-uncalStokes00$p <- sqrt(uncalStokes00$Q^2 + uncalStokes00$U^2); uncalStokes00$EVPA <- atan2(uncalStokes00$U, uncalStokes00$Q)*90/pi; uncalStokes00$mjdSec <- scanTime(onMJD); uncalStokes00$AZ <- AZ; uncalStokes00$EL <- EL
-uncalStokes01$p <- sqrt(uncalStokes01$Q^2 + uncalStokes01$U^2); uncalStokes01$EVPA <- atan2(uncalStokes01$U, uncalStokes01$Q)*90/pi; uncalStokes01$mjdSec <- scanTime(onMJD); uncalStokes01$AZ <- AZ; uncalStokes01$EL <- EL
+Stokes00$p <- sqrt(Stokes00$Q^2 + Stokes00$U^2); Stokes00$EVPA <- atan2(Stokes00$U, Stokes00$Q)*90/pi; Stokes00$mjdSec <- scanTime(onMJD); Stokes00$AZ <- AZ; Stokes00$EL <- EL
+Stokes01$p <- sqrt(Stokes01$Q^2 + Stokes01$U^2); Stokes01$EVPA <- atan2(Stokes01$U, Stokes01$Q)*90/pi; Stokes01$mjdSec <- scanTime(onMJD); Stokes01$AZ <- AZ; Stokes01$EL <- EL
 
 #cat(sprintf('AZ=%4.1f  EL=%4.1f  PA=%4.1f (deg)\n', AZ, EL, Pang*180/pi))
-fileName <- sprintf("%s.uncalStokes.Rdata", onMJD[[1]][1])
-save(uncalStokes00, uncalStokes01, file=fileName)
-uncalStokes00
-cat( mean(uncalStokes00$I), mean(uncalStokes00$Q), mean(uncalStokes00$U), mean(uncalStokes00$V), sqrt( mean(uncalStokes00$Q)^2 + mean(uncalStokes00$U)^2), atan2( mean(uncalStokes00$U), mean(uncalStokes00$Q))*90/pi); cat('\n')
-cat( sd(uncalStokes00$I), sd(uncalStokes00$Q), sd(uncalStokes00$U), sd(uncalStokes00$V), sd(uncalStokes00$p), sd(uncalStokes00$EVPA)); cat('\n')
-uncalStokes01
-cat( mean(uncalStokes01$I), mean(uncalStokes01$Q), mean(uncalStokes01$U), mean(uncalStokes01$V), sqrt( mean(uncalStokes01$Q)^2 + mean(uncalStokes01$U)^2), atan2( mean(uncalStokes01$U), mean(uncalStokes01$Q))*90/pi); cat('\n')
-cat( sd(uncalStokes01$I), sd(uncalStokes01$Q), sd(uncalStokes01$U), sd(uncalStokes01$V), sd(uncalStokes01$p), sd(uncalStokes01$EVPA)); cat('\n')
+fileName <- sprintf("%s.STOKES.Rdata", strsplit(args[2], "\\.")[[1]][1])
+save(Stokes00, Stokes01, file=fileName)
+Stokes00
+cat( mean(Stokes00$I), mean(Stokes00$Q), mean(Stokes00$U), mean(Stokes00$V), sqrt( mean(Stokes00$Q)^2 + mean(Stokes00$U)^2), atan2( mean(Stokes00$U), mean(Stokes00$Q))*90/pi); cat('\n')
+cat( sd(Stokes00$I), sd(Stokes00$Q), sd(Stokes00$U), sd(Stokes00$V), sd(Stokes00$p), sd(Stokes00$EVPA)); cat('\n')
+Stokes01
+cat( mean(Stokes01$I), mean(Stokes01$Q), mean(Stokes01$U), mean(Stokes01$V), sqrt( mean(Stokes01$Q)^2 + mean(Stokes01$U)^2), atan2( mean(Stokes01$U), mean(Stokes01$Q))*90/pi); cat('\n')
+cat( sd(Stokes01$I), sd(Stokes01$Q), sd(Stokes01$U), sd(Stokes01$V), sd(Stokes01$p), sd(Stokes01$EVPA)); cat('\n')
 cat('Stokes parameters (D-term calibrated) was saved into '); cat(fileName); cat('\n')
 dev.off()
