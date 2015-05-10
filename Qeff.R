@@ -10,7 +10,6 @@ probNbit <- function( a, levelNum=256 ){
 
 probThresh <- function( a, Thresh ){
 	levelNum <- length(Thresh) + 1
-	# Input vector a as a[1]=threshold and a[2]=bias scaled by sd.
 	volt <- Thresh* a[1]	# Threshold voltages
 	prob <- 0.5* c((erf2(volt[1] - a[2]) + 1), (erf2(volt[2:(levelNum-1)] - a[2]) - erf2(volt[1:(levelNum-2)] - a[2])), (1 - erf2(volt[levelNum-1] - a[2])))
 	return(prob)

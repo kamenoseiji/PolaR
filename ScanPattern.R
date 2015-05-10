@@ -41,8 +41,6 @@ scanTsys <- function(Scan, Tamb){
 
 #-------- Procedures
 args <- commandArgs(trailingOnly = T)
-#args <- c('2015114041130.Thresh.Rdata', 'SAM45.S235.as708fn.proj2.20150424110741', 'SAM45.S235.as708fn.proj2.20150424112534')
-#setwd('/Users/kameno/SVDATA/20150424')
 prefix <- character(0)
 threshFile <- args[1]
 SAM45File <- args[2:length(args)]

@@ -84,7 +84,7 @@ integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
 		if(scanIndex == 1){ multiScanSpec <- singleScanSpec / integSec }
 		if(scanIndex >  1){
             multiScanSpec <- append(multiScanSpec, (singleScanSpec / integSec))
-            cat(sprintf('ScanIndex=%d : Current length of SPEC = %d\n', scanIndex, length(multiScanSpec)))
+            #cat(sprintf('ScanIndex=%d : Current length of SPEC = %d\n', scanIndex, length(multiScanSpec)))
         }
     }
     cat( length(MJD[[1]]) )
