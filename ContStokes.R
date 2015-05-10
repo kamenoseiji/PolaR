@@ -1,9 +1,18 @@
 # ContStokes.R
 # usage: Rscript ContStokes.R [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
 #
+RPATH <- '~/Programs/PolaR'
+FuncList <- c('date', 'PolariCalib')
+source(sprintf('%s/loadModule.R', RPATH))
 library(RCurl)
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/date", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/PolariCalib", ssl.verifypeer = FALSE)))
+
+funcNum <- length(FuncList)
+for( index in 1:funcNum){
+    URL <- sprintf("https://raw.githubusercontent.com/kamenoseiji/PolaR/master/%s.R", FuncList[index])
+    Err <- try( eval(parse(text = getURL(URL, ssl.verifypeer = FALSE))), silent=FALSE)
+}   
+if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
+
 setwd('.')
 options(digits = 4)
 #-------- ScanTime
@@ -78,10 +87,6 @@ corr2Stokes <- function( XX, YY, XY, Dxy, pang ){
 #-------- Load Spec and Scan data
 args <- commandArgs(trailingOnly = T)
 setwd('.')
-#setwd('/Volumes/SSD/PolariS/20140417/')
-#args <- c('2014107024416.Scan.Rdata', '2014107024452.SPEC.Rdata', '2014107010610.WG.Rdata', '2014107010610.BP.Rdata')
-#setwd('/Volumes/SSD/PolariS/20150317/')
-#args <- c('2015076095603.Scan.Rdata', '2015076095635.SPEC.Rdata', '2015076095635.Dterm.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 load(args[1])	 #Load Scan file
 load(args[2])	 #Load SPEC file
 load(args[3])	 #Load D-term file
