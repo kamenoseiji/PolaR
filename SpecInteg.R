@@ -62,7 +62,7 @@ integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
             stopIndex  <- min( startIndex + remainingIntegSec - 1, ipnum[startFileIndex] - 1)
             fileName <- sprintf('%s.%s.%02d', prefix[startFileIndex + fileCounter], postfix, IF_index)
             command_text <- sprintf('%s %s %d %d', IntegCommand, fileName, startIndex, stopIndex)
-		    cat(sprintf("SCAN[%d]: MJD range=(%10.0f, %10.0f)  prefix-%s  scanRange=(%d, %d)\n", scanIndex, MJD[[1]][scanIndex], MJD[[2]][scanIndex], prefix[startFileIndex], startIndex, stopIndex))
+		    cat(sprintf("SCAN[%d]: MJD range=(%10.0f, %10.0f) %s scanRange=(%d, %d)\n", scanIndex, MJD[[1]][scanIndex], MJD[[2]][scanIndex], prefix[startFileIndex], startIndex, stopIndex))
             # cat(command_text); cat('\n')
             #-------- Throw time-integration process
             system(command_text, wait=T)
@@ -87,7 +87,7 @@ integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
             #cat(sprintf('ScanIndex=%d : Current length of SPEC = %d\n', scanIndex, length(multiScanSpec)))
         }
     }
-    cat( length(MJD[[1]]) )
+    #cat( length(MJD[[1]]) )
 	return(matrix(multiScanSpec, ncol=length(MJD[[1]])))
 }
 
