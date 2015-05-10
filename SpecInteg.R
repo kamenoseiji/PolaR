@@ -52,20 +52,18 @@ integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
 		startFileIndex <-findPrefix(MJD[[1]][scanIndex], prefix); endFileIndex <- findPrefix(MJD[[2]][scanIndex], prefix)
         integSec <- MJD[[2]][scanIndex] - MJD[[1]][scanIndex] + 1
         fileNum <- endFileIndex - startFileIndex + 1        # Number of files in the scan
-        cat(sprintf('Scan%d File=%d-%d integ=%d sec\n', 1, startFileIndex, endFileIndex, integSec))
+        # cat(sprintf('Scan%d File=%d-%d integ=%d sec\n', 1, startFileIndex, endFileIndex, integSec))
         #-------- Loop for file
         fileCounter <- 0
         remainingIntegSec <- integSec
         spec <- numeric(0)
         while( remainingIntegSec > 0 ){
-            #startIndex <- max(0, MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex + fileCounter]) + 1)
-            #stopIndex  <- min( startIndex + remainingIntegSec - 1, ipnum[startFileIndex] - 1)
             startIndex <- max(0, MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex + fileCounter]) )
             stopIndex  <- min( startIndex + remainingIntegSec - 1, ipnum[startFileIndex] - 1)
             fileName <- sprintf('%s.%s.%02d', prefix[startFileIndex + fileCounter], postfix, IF_index)
             command_text <- sprintf('%s %s %d %d', IntegCommand, fileName, startIndex, stopIndex)
 		    cat(sprintf("SCAN[%d]: MJD range=(%10.0f, %10.0f)  prefix-%s  scanRange=(%d, %d)\n", scanIndex, MJD[[1]][scanIndex], MJD[[2]][scanIndex], prefix[startFileIndex], startIndex, stopIndex))
-            cat(command_text); cat('\n')
+            # cat(command_text); cat('\n')
             #-------- Throw time-integration process
             system(command_text, wait=T)
             remainingIntegSec <- remainingIntegSec - (stopIndex - startIndex + 1)

@@ -83,7 +83,7 @@ int	specTimeInteg(
 	endSod = startSod + EndPP; startSod += StartPP;
 	sod2hms(startSod, &startH, &startM, &startS);
 	sod2hms(endSod,   &endH,   &endM,   &endS);
-	printf("SpecInteg.c: %02d:%02d:%02d - %02d:%02d:%02d\n", startH, startM, startS, endH, endM, endS);
+	// printf("SpecInteg.c: %02d:%02d:%02d - %02d:%02d:%02d\n", startH, startM, startS, endH, endM, endS);
 
 	//-------- Skip to the start position
 	fseek(file_ptr, StartPP* outSize, SEEK_CUR);
