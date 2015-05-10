@@ -248,7 +248,7 @@ bitThresh <- function(fname, thresh){
 	return(1/gaussResults[1,]^2)
 }
 #-------- Function to estimate power using autocorrelation
-Apower <- function(fname, thresh)
+Apower <- function(fname){
 	A <- readPolariS(fname)
 	chNum <- nrow(A); chRange <- floor(0.05*chNum):floor(0.95*chNum)
 	return( apply(A[chRange,], 2, mean))
