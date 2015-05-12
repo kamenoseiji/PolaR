@@ -68,13 +68,14 @@ for(fileIndex in 1:length(SAM45File)){
 	# if(fileIndex == 1){	Scan <- tempScan$scanDF}
 	# else { Scan <- rbind(Scan, tempScan$scanDF)}
 }
+Head <- tempScan$head2
 #-------- Tsys
 Scan <- scanTsys(Scan, 280.0)
 #-------- Save
 StartUTC <- mjd2doy(Scan$mjdSec[1])
 filePrefix <- sprintf("%04d%03d%02d%02d%02d", StartUTC$year, StartUTC$doy, StartUTC$hour, StartUTC$min, StartUTC$sec)
 fileName <- sprintf("%s.Scan.Rdata", filePrefix)
-save(Scan, file=fileName)
+save(Scan, Head, file=fileName)
 cat('Scan and Tsys records are saved into '); cat(fileName); cat('\n')
 #-------- Plot
 OnIndex <- which( Scan$scanType == 'ON')
