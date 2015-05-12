@@ -1,6 +1,8 @@
 ########
 # To use readSAM45.R, apply source('date.R') in advance.
 #
+#-------- Math Constants
+DEGRAD <- pi/180.0
 #-------- Constants
 ARYMAX <- 32	# アレイ数の最大値
 BINMAX <- 4		# ビン分割の最大値
@@ -224,7 +226,7 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 		DF_label <- append(DF_label, sprintf('power%02d', IF_ID[IF_index]))
 	}
 	names(scanDF) <- DF_label
-	return( scanDF )
+	return( list(scanDF=scanDF, head1=head1, head2=head2, SAM45spec=SAM45spec) )
 }
 
 #-------- 

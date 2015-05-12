@@ -63,8 +63,8 @@ for(index in 1:length(P00fileList)){
 for(fileIndex in 1:length(SAM45File)){
 	cat(sprintf('Processing %s ...\n', SAM45File[fileIndex]))
 	tempScan <- scanPattern(SAM45File[fileIndex], prefix, IF_ID, threshFile)
-	if(fileIndex == 1){	Scan <- tempScan}
-	else { Scan <- rbind(Scan, tempScan)}
+	if(fileIndex == 1){	Scan <- tempScan$scanDF}
+	else { Scan <- rbind(Scan, tempScan$scanDF)}
 }
 #-------- Tsys
 Scan <- scanTsys(Scan, 280.0)

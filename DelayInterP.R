@@ -1,7 +1,7 @@
 # DelayInterP
 # usage: Rscript ContStokes.R [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
 #
-library(RCurl)
+#library(RCurl)
 setwd('.')
 options(digits = 4)
 #-------- InterLeave
