@@ -29,6 +29,9 @@ averageSpec <- function( spec, weight ){
 }
 
 argList <- parseArg(commandArgs(trailingOnly = T))
+cat(argList$fileName); cat('\n')
+cat(argList$chShift); cat('\n')
+cat(argList$IFselect); cat('\n')
 fileNum <- length(argList$fileName)
 setwd('.')
 SDrange <- 8193:16384
@@ -57,6 +60,6 @@ StokesQ02 <- averageSpec(StokesQ, WT)
 StokesU02 <- averageSpec(StokesU, WT)
 StokesV02 <- averageSpec(StokesV, WT)
 
-fileName <- sprintf("%s.SCOMB.%d.Rdata", strsplit(args[1], "\\.")[[1]][1], argList$IFselect[1])
+fileName <- sprintf("%s.SCOMB.%d.Rdata", strsplit(argList$fileName[1], "\\.")[[1]][1], argList$IFselect[1])
 save(StokesI02, StokesQ02, StokesU02, StokesV02, file=fileName)
 cat('Combined Stokes spectra are saved into '); cat(fileName); cat('\n')
