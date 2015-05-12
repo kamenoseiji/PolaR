@@ -1,31 +1,62 @@
+#-------- Parse command-line arguments
+parseArg <- function( args ){
+    argNum <- length(args)
+    chShift <- rep(0, 1024)
+    IFselect <- rep(1, 1024)
+    fileName <- c()
+    fileIndex <- 0
+    for( index in 1:argNum ){
+        switch( substr(args[index], 1,2),
+            "-C" = chShift[fileIndex] <- round(as.numeric(substring(args[index], 3))),
+            "-I" = IFselect[fileIndex] <- as.numeric(substring(args[index], 3)),
+            { fileIndex = fileIndex + 1; fileName[fileIndex] <- args[index]}
+        )
+    }
+    fileNum <- length(fileName)
+    return( list(fileName = fileName, chShift = chShift[1:fileNum], IFselect = IFselect[1:fileNum]) )
+}
+
+ShiftCH <- function( spec, shift){
+    if(shift == 0){ return(spec)}
+    chNum <- length(spec)
+    if(shift > 0){ return( c( spec[(chNum - shift + 1):chNum], spec[1:(chNum - shift)])) }
+    return( c(spec[(-shift + 1):chNum], spec[1:(-shift)]))
+}
+
 averageSpec <- function( spec, weight ){
     fileNum <- length(weight)
     return( rowSums(matrix( spec, ncol=fileNum ) %*% diag(weight)) / sum(weight) )
 }
 
-args <- commandArgs(trailingOnly = T)
+argList <- parseArg(commandArgs(trailingOnly = T))
+fileNum <- length(argList$fileName)
 setwd('.')
-fileNum <- length(args)
 SDrange <- 8193:16384
-I02 <- numeric(0); I13 <- numeric(0)
-Q02 <- numeric(0); Q13 <- numeric(0)
-U02 <- numeric(0); U13 <- numeric(0)
-V02 <- numeric(0); V13 <- numeric(0)
+StokesI <- numeric(0)
+StokesQ <- numeric(0)
+StokesU <- numeric(0)
+StokesV <- numeric(0)
 WT <- numeric(fileNum)
 for( file_index in 1:fileNum){
-    load(args[file_index])
-    I02 <- append(I02, StokesI02); I13 <- append(I13, StokesI13)
-    Q02 <- append(Q02, StokesQ02); Q13 <- append(Q13, StokesQ13)
-    U02 <- append(U02, StokesU02); U13 <- append(U13, StokesU13)
-    V02 <- append(V02, StokesV02); V13 <- append(V13, StokesV13)
+    load(argList$fileName[file_index])
+    if( argList$IFselect[file_index] == 2 ){
+        StokesI02 <- StokesI13
+        StokesQ02 <- StokesQ13
+        StokesU02 <- StokesU13
+        StokesV02 <- StokesV13
+    }
+    StokesI <- append(StokesI, ShiftCH(StokesI02, argList$chShift[file_index]))
+    StokesQ <- append(StokesQ, ShiftCH(StokesQ02, argList$chShift[file_index]))
+    StokesU <- append(StokesU, ShiftCH(StokesU02, argList$chShift[file_index]))
+    StokesV <- append(StokesV, ShiftCH(StokesV02, argList$chShift[file_index]))
     WT[file_index] <- 1.0/var(StokesV02[SDrange])
 }
 #
-StokesI02 <- averageSpec(I02, WT); StokesI13 <- averageSpec(I13, WT)
-StokesQ02 <- averageSpec(Q02, WT); StokesQ13 <- averageSpec(Q13, WT)
-StokesU02 <- averageSpec(U02, WT); StokesU13 <- averageSpec(U13, WT)
-StokesV02 <- averageSpec(V02, WT); StokesV13 <- averageSpec(V13, WT)
+StokesI02 <- averageSpec(StokesI, WT)
+StokesQ02 <- averageSpec(StokesQ, WT)
+StokesU02 <- averageSpec(StokesU, WT)
+StokesV02 <- averageSpec(StokesV, WT)
 
-fileName <- sprintf("%s.SCOMB.Rdata", strsplit(args[1], "\\.")[[1]][1])
-save(StokesI02, StokesI13, StokesQ02, StokesQ13, StokesU02, StokesU13, StokesV02, StokesV13, file=fileName)
+fileName <- sprintf("%s.SCOMB.%d.Rdata", strsplit(args[1], "\\.")[[1]][1], argList$IFselect[1])
+save(StokesI02, StokesQ02, StokesU02, StokesV02, file=fileName)
 cat('Combined Stokes spectra are saved into '); cat(fileName); cat('\n')

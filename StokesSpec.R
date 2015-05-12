@@ -142,10 +142,7 @@ deDopp <- function( spec, chShift ){
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
 setwd('.')
-#setwd('/Volumes/SSD/PolariS/20140417/')
-#args <- c('2014107013853.Scan.Rdata', '2014107013932.SPEC.Rdata', '2014107040319.Dcomb.Rdata', '2014107010610.WG.Rdata', '2014107010610.BP.Rdata')
-#args <- c('2015076052841.Scan.Rdata', '2015076052912.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
-#args <- c('2015076043056.Scan.Rdata', '2015076043132.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
+
 load(args$fileName[1])	 #Load Scan file
 load(args$fileName[2])	 #Load SPEC file
 load(args$fileName[3])	 #Load delay file
