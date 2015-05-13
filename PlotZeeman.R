@@ -39,9 +39,6 @@ setwd('.')
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
 setwd('.')
-#setwd('/Volumes/SSD/PolariS/20150317/')
-#args <- c('2015076052841.Scan.Rdata', '2015076052912.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
-#args <- c('2015076043056.Scan.Rdata', '2015076043132.SPEC.Rdata', '2015076035301.WG.Rdata', '2015076035301.BP.Rdata')
 load(args$fileName)	 #Load Stokes file
 # freq_track <- 45379033000 # [Hz]
 # freq_center <- c(45490316000, 45379033000, 45490316000, 45379033000)
@@ -101,8 +98,8 @@ abline(h=0, col='gray')
 #plot( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(predStokesV, plotBunch), type='s', xlab='Frequency [MHz]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
 plot(freq[plotRange], predStokesV, type='l', xlab='Frequency [MHz]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
 
-maxDif <- max(predStokesV); maxFreq <- freq[plotRange[which.max(predStokesV)]] 
-minDif <- min(predStokesV); minFreq <- freq[plotRange[which.min(predStokesV)]] 
+maxDif <- max(predStokesV); maxFreq <- freq[plotRange[which.max(predStokesV)]]; cat(sprintf('%8.5e K/Hz @ %5.3f MHz\n', maxDif, maxFreq))
+minDif <- min(predStokesV); minFreq <- freq[plotRange[which.min(predStokesV)]]; cat(sprintf('%8.5e K/Hz @ %5.3f MHz\n', minDif, minFreq)) 
 text( maxFreq, maxDif, sprintf('%5.2e K/Hz at %4.2f MHz', maxDif, maxFreq), cex=0.3, pos=4)
 text( minFreq, minDif, sprintf('%5.2e K/Hz at %4.2f MHz', minDif, minFreq), cex=0.3, pos=4)
 abline(h=0)

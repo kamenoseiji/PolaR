@@ -3,17 +3,19 @@ parseArg <- function( args ){
     argNum <- length(args)
     chShift <- rep(0, 1024)
     IFselect <- rep(1, 1024)
+    Mirror  <- rep(1, 1024)     # Mirror parity (X-Y cable inversion)
     fileName <- c()
     fileIndex <- 0
     for( index in 1:argNum ){
         switch( substr(args[index], 1,2),
             "-C" = chShift[fileIndex] <- round(as.numeric(substring(args[index], 3))),
             "-I" = IFselect[fileIndex] <- as.numeric(substring(args[index], 3)),
+            "-M" = Mirror[fileIndex] <- -1,
             { fileIndex = fileIndex + 1; fileName[fileIndex] <- args[index]}
         )
     }
     fileNum <- length(fileName)
-    return( list(fileName = fileName, chShift = chShift[1:fileNum], IFselect = IFselect[1:fileNum]) )
+    return( list(fileName = fileName, chShift = chShift[1:fileNum], IFselect = IFselect[1:fileNum], Mirror = Mirror[1:fileNum]) )
 }
 
 ShiftCH <- function( spec, shift){
@@ -29,9 +31,10 @@ averageSpec <- function( spec, weight ){
 }
 
 argList <- parseArg(commandArgs(trailingOnly = T))
-cat(argList$fileName); cat('\n')
-cat(argList$chShift); cat('\n')
-cat(argList$IFselect); cat('\n')
+#cat(argList$fileName); cat('\n')
+#cat(argList$chShift); cat('\n')
+#cat(argList$IFselect); cat('\n')
+#cat(argList$Mirror); cat('\n')
 fileNum <- length(argList$fileName)
 setwd('.')
 SDrange <- 8193:16384
@@ -49,10 +52,11 @@ for( file_index in 1:fileNum){
         StokesV02 <- StokesV13
     }
     StokesI <- append(StokesI, ShiftCH(StokesI02, argList$chShift[file_index]))
-    StokesQ <- append(StokesQ, ShiftCH(StokesQ02, argList$chShift[file_index]))
+    StokesQ <- append(StokesQ, argList$Mirror[file_index]* ShiftCH(StokesQ02, argList$chShift[file_index]))
     StokesU <- append(StokesU, ShiftCH(StokesU02, argList$chShift[file_index]))
-    StokesV <- append(StokesV, ShiftCH(StokesV02, argList$chShift[file_index]))
+    StokesV <- append(StokesV, argList$Mirror[file_index]* ShiftCH(StokesV02, argList$chShift[file_index]))
     WT[file_index] <- 1.0/var(StokesV02[SDrange])
+    cat(sprintf('%s : SD=%6.2e K\n', argList$fileName[file_index], sd(StokesV02[SDrange])))
 }
 #
 StokesI02 <- averageSpec(StokesI, WT)
