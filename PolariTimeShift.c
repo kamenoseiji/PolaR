@@ -9,24 +9,30 @@
 #define	SHIFT	2
 #define ARGNUM	3
 
-int	hms2sod(
-	int		hour,		// IN: Hour
-	int		min,		// IN: Minute
-	int		sec)		// IN: Sec
+int soy2dhms(
+    unsigned long   sc,         // IN: Second of Year
+    int   *doy_ptr,   // Out: Pointer to Day of Year
+    int   *hh_ptr,    // Out: Pointer to Hour
+    int   *mm_ptr,    // Out: Pointer to Minute
+    int   *ss_ptr)    // Out: Pointer to Second
 {
-	return( sec + 60*(min + 60*hour));
+    *doy_ptr = sc / 86400 + 1;
+    *hh_ptr  = (sc % 86400 ) / 3600;
+    *mm_ptr  = (sc % 3600 ) / 60;
+    *ss_ptr  =  sc % 60;
+    if( sc != (((*doy_ptr - 1)* 24 + (*hh_ptr))* 60 + (*mm_ptr))* 60 + (*ss_ptr)){
+        return(-1);
+    }
+    return(0);
 }
 
-int	sod2hms(
-	int		sod,		// IN: Second of the day
-	int		*hour,		// Hour
-	int		*min,		// Minute
-	int		*sec)		// Sec
+unsigned long dhms2soy(
+    unsigned long   doy,    // IN: Day of Year
+    unsigned long   hh,     // IN: Hour
+    unsigned long   mm,     // IN: Min
+    unsigned long   ss)     // IN: Sec
 {
-	*hour = sod / 3600;
-	*min  = (sod % 3600) / 60;
-	*sec  = sod % 60;
-	return(sod - hms2sod(*hour, *min, *sec));
+    return((((doy - 1)* 24 + hh)* 60 + mm)* 60 + ss);
 }
 
 int	timeShift(
@@ -37,7 +43,7 @@ int	timeShift(
 	char	outName[24];			// Output File Name
 	char	prefix[14];			    // Output File Name
 	struct	SHM_PARAM	param;		// File Header
-    long    startSod, shiftSod;     // Second of Year
+    unsigned long    startSoY, shiftSoY;     // Second of Year
 
 	//-------- Open File
 	if((file_ptr = fopen(fname, "rb+")) == NULL){ return(-1);}	// Open input file
@@ -46,9 +52,12 @@ int	timeShift(
 	fread(&param, sizeof(struct SHM_PARAM), 1, file_ptr);
 
 	//-------- Time Shift in Header
-	startSod = hms2sod(param.hour, param.min, param.sec);
-	shiftSod = startSod + shift;
-	sod2hms(shiftSod, &(param.hour), &(param.min), &(param.sec));
+	// startSod = hms2sod(param.hour, param.min, param.sec);
+	// shiftSod = startSod + shift;
+	// sod2hms(shiftSod, &(param.hour), &(param.min), &(param.sec));
+	startSoY = dhms2soy(param.doy, param.hour, param.min, param.sec);
+	shiftSoY = startSoY + shift;
+	soy2dhms(shiftSoY, &(param.doy), &(param.hour), &(param.min), &(param.sec));
 
     strcpy(outName, fname);
     sprintf(prefix, "%04d%03d%02d%02d%02d", param.year, param.doy, param.hour, param.min, param.sec );
