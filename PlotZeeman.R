@@ -117,4 +117,6 @@ arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
 lines( bunch_vec(veloc0[plotRange], fitBunch), bunch_vec(predStokesV*fit$coefficients[2], fitBunch), col='red')
 legend(min(veloc0[plotRange]), 1.9*Ymax, legend=sprintf('Zeeman Shift = %5.1f ± %4.1f Hz', fit[[1]][2], summary(fit)[[4]][5]))
 
+DF <- data.frame(veloc = veloc0[plotRange], I = StokesI[plotRange], Q = StokesQ[plotRange], U = StokesU[plotRange], V = StokesV[plotRange])
+write.table( format(DF, digits=6), file=sprintf("%s.Zeeman.%d.txt", strsplit(args$fileName, "\\.")[[1]][1], args$IF), quote=F, col.names=T, row.names=F)
 dev.off()
