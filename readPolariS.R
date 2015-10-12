@@ -147,3 +147,25 @@ integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
     #cat( length(MJD[[1]]) )
     return(matrix(multiScanSpec, ncol=length(MJD[[1]])))
 }
+
+#-------- Function to Get PolariS file information
+GetChnumRecnum <- function(fname, postfix){
+    #-------- Read file header
+    file_ptr <- file(fname, "rb")
+    header <- readBin(file_ptr, what=integer(), size=4, n=32)
+    close(file_ptr)
+    #
+    #-------- PolariS Header Dictionary
+    head_size <- 128
+    numCH_index <- 16
+    numBit_index <- 11
+    chnum <- header[numCH_index]
+    levelnum <- 2^header[numBit_index]
+    byteperrec <- 0
+    if( postfix == 'A' ){   byteperrec <- 4* chnum }
+    if( postfix == 'C' ){   byteperrec <- 8* chnum }
+    if( postfix == 'P' ){   byteperrec <- 4*levelnum }
+    if( byteperrec == 0 ){    return(list(chnum=0, ipnum=0))}
+    file_size <- file.info(fname)$size - head_size
+    return( list(chnum=chnum, ipnum=file_size / byteperrec) )
+}

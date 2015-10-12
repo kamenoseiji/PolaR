@@ -49,9 +49,13 @@ OfIndex <- which( scanDF$scanType == 'OFF')
 prefix <- character(0)
 Year <- substr(strsplit(SAM45File, '\\.')[[1]][5], 1, 4)
 A00fileList <- system(  sprintf('ls %s*.A.00', Year), intern=T )
+ipnum <- integer(length(P00fileList))
 for(index in 1:length(A00fileList)){
 	prefix[index] <- substr(A00fileList[index], 1, 13)
+	AfileSize <- GetChnumRecnum(sprintf('%s.A.00', prefix[index]), 'A')
+	ipnum[index] <- AfileSize$ipnum
 }
+chNum <- AfileSize$chnum
 #-------- List IF ID of PolariS data
 A00fileList <- system(  sprintf('ls %s.A.*', prefix[1]), intern=T )
 IF_ID <- integer(0)
@@ -61,7 +65,7 @@ for(index in 1:length(A00fileList)){
 
 AfileIndex <- seq(findPrefix(min(SAM45df$mjd_st), prefix), findPrefix(max(SAM45df$mjd_st), prefix))
 onMJD  <- scanSegment(scanDF$mjdSec[OnIndex])
-on_A00 <- integSegment(prefix, chNum, ipnum, 'A', 0, onMJD )
+on_A00 <- integSegment(prefix, chNum, length(prefix), 'A', 0, onMJD )
 
 
 
