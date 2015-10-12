@@ -39,52 +39,6 @@ GetChnumRecnum <- function(fname, postfix){
     return( list(chnum=chnum, ipnum=file_size / byteperrec) )
 }
 
-#-------- Function to integrate spectra referring scan pattern
-integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
-    #-------- Loop for Scan
-	for(scanIndex in 1:length(MJD[[1]])){
-		startFileIndex <-findPrefix(MJD[[1]][scanIndex], prefix); endFileIndex <- findPrefix(MJD[[2]][scanIndex], prefix)
-        integSec <- MJD[[2]][scanIndex] - MJD[[1]][scanIndex] + 1
-        fileNum <- endFileIndex - startFileIndex + 1        # Number of files in the scan
-        # cat(sprintf('Scan%d File=%d-%d integ=%d sec\n', 1, startFileIndex, endFileIndex, integSec))
-        #-------- Loop for file
-        fileCounter <- 0
-        remainingIntegSec <- integSec
-        spec <- numeric(0)
-        while( remainingIntegSec > 0 ){
-            startIndex <- max(0, MJD[[1]][scanIndex] - prefix2MJDsec(prefix[startFileIndex + fileCounter]) )
-            stopIndex  <- min( startIndex + remainingIntegSec - 1, ipnum[startFileIndex] - 1)
-            fileName <- sprintf('%s.%s.%02d', prefix[startFileIndex + fileCounter], postfix, IF_index)
-            command_text <- sprintf('%s %s %d %d', IntegCommand, fileName, startIndex, stopIndex)
-		    cat(sprintf("SCAN[%d]: MJD range=(%10.0f, %10.0f) %s scanRange=(%d, %d)\n", scanIndex, MJD[[1]][scanIndex], MJD[[2]][scanIndex], prefix[startFileIndex], startIndex, stopIndex))
-            # cat(command_text); cat('\n')
-            #-------- Throw time-integration process
-            system(command_text, wait=T)
-            remainingIntegSec <- remainingIntegSec - (stopIndex - startIndex + 1)
-            #-------- Read Time-integrated spectrum
-            file_size <- file.info('tmp.spec')$size
-            tmpSpec <- readBin('tmp.spec', what=numeric(), n=file_size/4, size=4)
-            if(postfix == 'C'){
-                even_index <- (0:(chnum-1))*2; odd_index <- even_index + 1; even_index <- odd_index + 1
-                tmpSpec <- complex(real = tmpSpec[odd_index], imaginary=tmpSpec[even_index])
-            }
-            if( fileCounter == 0 ){
-                singleScanSpec <- tmpSpec
-            } else {
-                singleScanSpec <- singleScanSpec + tmpSpec
-            }
-            fileCounter <- fileCounter + 1
-        }
-		if(scanIndex == 1){ multiScanSpec <- singleScanSpec / integSec }
-		if(scanIndex >  1){
-            multiScanSpec <- append(multiScanSpec, (singleScanSpec / integSec))
-            #cat(sprintf('ScanIndex=%d : Current length of SPEC = %d\n', scanIndex, length(multiScanSpec)))
-        }
-    }
-    #cat( length(MJD[[1]]) )
-	return(matrix(multiScanSpec, ncol=length(MJD[[1]])))
-}
-
 #-------- Procedures
 args <- commandArgs(trailingOnly = T)
 prefix <- character(0)
