@@ -94,5 +94,9 @@ findPrefix <- function(mjdSec, prefix){
 	return(max(index))
 }
 
-
-
+#-------- Function to produce scan pattern
+scanSegment <- function( mjdSec ){
+    scanStart <- c(min(mjdSec), mjdSec[which(diff(mjdSec) > 1) + 1])
+    scanEnd <- c(mjdSec[which( diff(mjdSec) > 1)], max(mjdSec))
+    return( data.frame( startMjd=scanStart, stopMjd=scanEnd ))
+}

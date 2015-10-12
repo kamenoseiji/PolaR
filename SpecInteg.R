@@ -38,12 +38,6 @@ GetChnumRecnum <- function(fname, postfix){
     file_size <- file.info(fname)$size - head_size
     return( list(chnum=chnum, ipnum=file_size / byteperrec) )
 }
-#-------- Function to produce scan pattern
-scanSegment <- function( mjdSec ){
-	scanStart <- c(min(mjdSec), mjdSec[which(diff(mjdSec) > 1) + 1])
-	scanEnd <- c(mjdSec[which( diff(mjdSec) > 1)], max(mjdSec))
-	return( data.frame( startMjd=scanStart, stopMjd=scanEnd ))
-}
 
 #-------- Function to integrate spectra referring scan pattern
 integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){

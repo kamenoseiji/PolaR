@@ -42,6 +42,8 @@ scanTsys <- function(Scan, Tamb){
 
 SAM45File <- '/Volumes/HDD/PolariS/SAM45/SAM45.OMC2p5.as708fn.proj2.20150424124554'
 scanDF <- scanPointing(SAM45File)
+OnIndex <- which( scanDF$scanType == 'ON')
+OfIndex <- which( scanDF$scanType == 'OFF')
 
 #-------- List prefix of PolariS data
 prefix <- character(0)
@@ -50,8 +52,16 @@ A00fileList <- system(  sprintf('ls %s*.A.00', Year), intern=T )
 for(index in 1:length(A00fileList)){
 	prefix[index] <- substr(A00fileList[index], 1, 13)
 }
+#-------- List IF ID of PolariS data
+A00fileList <- system(  sprintf('ls %s.A.*', prefix[1]), intern=T )
+IF_ID <- integer(0)
+for(index in 1:length(A00fileList)){
+	IF_ID[index] <- as.integer(strsplit(A00fileList[index] , '\\.')[[1]][3])
+}
 
-findPrefix(SAM45df$mjd_st[1], prefix)
+AfileIndex <- seq(findPrefix(min(SAM45df$mjd_st), prefix), findPrefix(max(SAM45df$mjd_st), prefix))
+onMJD  <- scanSegment(scanDF$mjdSec[OnIndex])
+on_A00 <- integSegment(prefix, chNum, ipnum, 'A', 0, onMJD )
 
 
 
