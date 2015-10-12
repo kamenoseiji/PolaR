@@ -102,6 +102,7 @@ scanSegment <- function( mjdSec ){
 }
 
 #-------- Function to integrate spectra referring scan pattern
+IntegCommand <- "/usr/custom/bin/SpecInteg"
 integSegment <- function( prefix, chnum, ipnum, postfix, IF_index, MJD ){
     #-------- Loop for Scan
     for(scanIndex in 1:length(MJD[[1]])){

@@ -15,7 +15,6 @@ for( index in 1:funcNum){
 if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 
 setwd('.')
-IntegCommand <- "/usr/custom/bin/SpecInteg"
 
 #-------- Function to Get PolariS file information
 GetChnumRecnum <- function(fname, postfix){
