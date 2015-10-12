@@ -52,16 +52,17 @@ freq <- (0:(chNum-1))/chNum* 4.0	# MHz
 chSep <- 4.0 / chNum
 veloc0 <- (args$trackFreq - freq) / args$restFreq * 299792.458 + args$trackVel
 SDrange <- 8193:16384
+JyK <- 3.0 # Jy per K
 if(args$IF == 2){
-    StokesI <- StokesI13
-    StokesQ <- StokesQ13
-    StokesU <- StokesU13
-    StokesV <- StokesV13
+    StokesI <- StokesI13* JyK
+    StokesQ <- StokesQ13* JyK
+    StokesU <- StokesU13* JyK
+    StokesV <- StokesV13* JyK
 } else {
-    StokesI <- StokesI02
-    StokesQ <- StokesQ02
-    StokesU <- StokesU02
-    StokesV <- StokesV02
+    StokesI <- StokesI02* JyK
+    StokesQ <- StokesQ02* JyK
+    StokesU <- StokesU02* JyK
+    StokesV <- StokesV02* JyK
 }
 #-------- Plot Stokes I 
 pdf(PDFfilename)
@@ -89,7 +90,7 @@ labels <- c('I', 'Q', 'U')
 #lines( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesQ[plotRange], plotBunch), type='s', col=cols[2])
 #lines( bunch_vec(freq[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesU[plotRange], plotBunch), type='s', col=cols[3])
 #lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predStokesI, fitBunch), col='orange')
-plot( veloc0[plotRange], StokesI[plotRange], type='l', xlab='LSR Velocity [km/s]', ylab='Stokes I [K]', main=sprintf('%s %s', args$srcName, args$lineName))
+plot( veloc0[plotRange], StokesI[plotRange], type='l', xlab='LSR Velocity [km/s]', ylab='Stokes I [Jy]', main=sprintf('%s %s', args$srcName, args$lineName))
 lines( bunch_vec(veloc0[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesQ[plotRange], plotBunch), type='s', col=cols[2])
 lines( bunch_vec(veloc0[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(StokesU[plotRange], plotBunch), type='s', col=cols[3])
 lines( bunch_vec(veloc0[plotRange], fitBunch), bunch_vec(predStokesI, fitBunch), col='orange')
@@ -97,21 +98,22 @@ legend("topleft", legend=labels, col=cols, lty=rep(1,3))
 abline(h=0, col='gray')
 #-------- Plot dI/df 
 #plot(freq[plotRange], predStokesV, type='l', xlab='Frequency [MHz]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
-plot(veloc0[plotRange], predStokesV, type='l', xlab='LSR Velocity [km/s]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
+plot(veloc0[plotRange], predStokesV, type='l', xlab='LSR Velocity [km/s]', ylab='dI/df [Jy/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
 maxDif <- max(predStokesV); maxVeloc <- veloc0[plotRange[which.max(predStokesV)]]; cat(sprintf('%8.5e K/Hz @ %5.3f km/s\n', maxDif, maxVeloc))
 minDif <- min(predStokesV); minVeloc <- veloc0[plotRange[which.min(predStokesV)]]; cat(sprintf('%8.5e K/Hz @ %5.3f km/s\n', minDif, minVeloc)) 
 text( maxVeloc, maxDif, sprintf('%5.2e K/Hz at %4.2f km/s', maxDif, maxVeloc), cex=0.3, pos=4)
 text( minVeloc, minDif, sprintf('%5.2e K/Hz at %4.2f km/s', minDif, minVeloc), cex=0.3, pos=4)
 abline(h=0)
 #-------- Plot Stokes V 
-err <- sd(StokesV02[SDrange]) / sqrt(plotBunch)
+#err <- sd(StokesV02[SDrange]) / sqrt(plotBunch)
+err <- sd(StokesV[SDrange]) / sqrt(plotBunch)
 fit <- lm(formula=z~1+x+y, data=data.frame(x=predStokesV[lineRange], y=predStokesI[lineRange], z=StokesV[plotRange[lineRange]]))
 summary(fit)
 #plotX <- bunch_vec(freq[plotRange], plotBunch)
 plotX <- bunch_vec(veloc0[plotRange], plotBunch)
 plotY <- bunch_vec(StokesV[plotRange] - fit$coefficients[1] - fit$coefficients[3]* predStokesI, plotBunch)
 Ymax <- max(abs(plotY))
-plot( plotX, plotY , pch=20, ylim=c(-2.0*Ymax, 2.0*Ymax), xlab='LSR Velocity [km/s]', ylab='Stokes V [K]', main=sprintf('%s %s', args$srcName, args$lineName))
+plot( plotX, plotY , pch=20, ylim=c(-2.0*Ymax, 2.0*Ymax), xlab='LSR Velocity [km/s]', ylab='Stokes V [Jy]', main=sprintf('%s %s', args$srcName, args$lineName))
 arrows( plotX, plotY - err, plotX, plotY + err, angle=90, length=0)
 #lines( bunch_vec(freq[plotRange], fitBunch), bunch_vec(predStokesV*fit$coefficients[2], fitBunch), col='red')
 lines( bunch_vec(veloc0[plotRange], fitBunch), bunch_vec(predStokesV*fit$coefficients[2], fitBunch), col='red')
