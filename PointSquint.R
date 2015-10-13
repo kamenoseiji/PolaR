@@ -3,7 +3,7 @@
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
 RPATH <- '~/Programs/PolaR'
-FuncList <- c('readSAM45', 'readPolariS', 'Qeff', 'date', 'plotTool')
+FuncList <- c('readSAM45', 'readPolariS', 'PolariCalib', 'Qeff', 'date', 'plotTool')
 source(sprintf('%s/loadModule.R', RPATH))
 library(RCurl)
 
@@ -15,41 +15,13 @@ for( index in 1:funcNum){
 if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 
 setwd('.')
-#-------- Function to calculate Tsys from Scan Pattern
-scanTsys <- function(Scan, Tamb){
-	nameList <- names(Scan)
-	R_index <- which(Scan$scanType == 'R')
-	#-------- Median Window Filter
-	medR <- median( Scan$power00[R_index])
-	R_index <- which( abs( (Scan$power00 - medR)/medR ) < 0.02 )
-	#-------- On and Off scans
-	index <- which(Scan$scanType == 'OFF' | Scan$scanType == 'ON')
-	OutOfR_index <- which( Scan$mjdSec > max(Scan$mjdSec[R_index]))
-	power_ptr <- grep('power', nameList); IFnum <- length(power_ptr)
-	for(IF_index in 1:IFnum){
-		 IF_ID <- as.integer(strsplit(nameList[power_ptr[IF_index]], "power")[[1]][2])
-		 Tsys   <- rep(NA, length(Scan$mjdSec))
-		 RPower <- predict(smooth.spline(Scan$mjdSec[R_index], Scan[[power_ptr[IF_index]]][R_index], spar=1.0), Scan$mjdSec)$y
-		 RPower[OutOfR_index] <- RPower[max(R_index)]
-		 Tsys[index]  <- Tamb / (RPower[index] / Scan[[power_ptr[IF_index]]][index] - 1.0)
-		 Scan <- cbind(Scan, Tsys)
-		 nameList <- append(nameList, sprintf('Tsys%02d', IF_ID))
-	}
-	names(Scan) <- nameList
-	return(Scan)
-}
-
 
 SAM45File <- '/Volumes/HDD/PolariS/SAM45/SAM45.OMC2p5.as708fn.proj2.20150424124554'
-scanDF <- scanPointing(SAM45File)
-OnIndex <- which( scanDF$scanType == 'ON')
-OfIndex <- which( scanDF$scanType == 'OFF')
-
 #-------- List prefix of PolariS data
 prefix <- character(0)
 Year <- substr(strsplit(SAM45File, '\\.')[[1]][5], 1, 4)
 A00fileList <- system(  sprintf('ls %s*.A.00', Year), intern=T )
-ipnum <- integer(length(P00fileList))
+ipnum <- integer(length(A00fileList))
 for(index in 1:length(A00fileList)){
 	prefix[index] <- substr(A00fileList[index], 1, 13)
 	AfileSize <- GetChnumRecnum(sprintf('%s.A.00', prefix[index]), 'A')
@@ -62,11 +34,28 @@ IF_ID <- integer(0)
 for(index in 1:length(A00fileList)){
 	IF_ID[index] <- as.integer(strsplit(A00fileList[index] , '\\.')[[1]][3])
 }
+#-------- Produce Scan data frame
+Scan <- scanPointing(SAM45File)
+OnIndex <- which( Scan$scanType == 'ON');  onMJD  <- scanSegment(Scan$mjdSec[OnIndex])
+OfIndex <- which( Scan$scanType == 'OFF'); offMJD <- scanSegment(Scan$mjdSec[OfIndex])
 
-AfileIndex <- seq(findPrefix(min(SAM45df$mjd_st), prefix), findPrefix(max(SAM45df$mjd_st), prefix))
-onMJD  <- scanSegment(scanDF$mjdSec[OnIndex])
-on_A00 <- integSegment(prefix, chNum, length(prefix), 'A', 0, onMJD )
+#AfileIndex <- seq(findPrefix(min(SAM45df$mjd_st), prefix), findPrefix(max(SAM45df$mjd_st), prefix))
+on_C00  <- integSegment(prefix, chNum, ipnum, 'C', 0, onMJD )
+on_C01  <- integSegment(prefix, chNum, ipnum, 'C', 1, onMJD )
+on_A00  <- integSegment(prefix, chNum, ipnum, 'A', 0, onMJD )
+on_A01  <- integSegment(prefix, chNum, ipnum, 'A', 1, onMJD )
+on_A02  <- integSegment(prefix, chNum, ipnum, 'A', 2, onMJD )
+on_A03  <- integSegment(prefix, chNum, ipnum, 'A', 3, onMJD )
+off_C00 <- integSegment(prefix, chNum, ipnum, 'C', 0, offMJD )
+off_C01 <- integSegment(prefix, chNum, ipnum, 'C', 1, offMJD )
+off_A00 <- integSegment(prefix, chNum, ipnum, 'A', 0, offMJD )
+off_A01 <- integSegment(prefix, chNum, ipnum, 'A', 1, offMJD )
+off_A02 <- integSegment(prefix, chNum, ipnum, 'A', 2, offMJD )
+off_A03 <- integSegment(prefix, chNum, ipnum, 'A', 3, offMJD )
 
+#pointingNum <- floor((length(offMJD$stopMjd) - 1) / 2)
+#for index in 1:pointingNum{
+#}
 
 
 if(0){
