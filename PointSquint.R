@@ -17,6 +17,9 @@ if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 setwd('.')
 
 SAM45File <- '/Volumes/HDD/PolariS/SAM45/SAM45.OMC2p5.as708fn.proj2.20150424124554'
+threshFile <- '2015114074120.Thresh.Rdata'
+DtermFile <- '2015114022242.Dcomb.Rdata'
+load(DtermFile)
 #-------- List prefix of PolariS data
 prefix <- character(0)
 Year <- substr(strsplit(SAM45File, '\\.')[[1]][5], 1, 4)
@@ -35,10 +38,15 @@ for(index in 1:length(A00fileList)){
 	IF_ID[index] <- as.integer(strsplit(A00fileList[index] , '\\.')[[1]][3])
 }
 #-------- Produce Scan data frame
-Scan <- scanPointing(SAM45File)
+tmpScan <- scanPattern(SAM45File, prefix, IF_ID, threshFile); Scan <- scanTsys(tmpScan$scanDF, 280.0)
 OnIndex <- which( Scan$scanType == 'ON');  onMJD  <- scanSegment(Scan$mjdSec[OnIndex])
 OfIndex <- which( Scan$scanType == 'OFF'); offMJD <- scanSegment(Scan$mjdSec[OfIndex])
-
+D_index <- which( D$Gxy02 + D$Gxy13 > 0.9* median( D$Gxy02 + D$Gxy13 )) # Flag pointing-error out
+Rxy02 <- mean(D$Rxy02[D_index])
+Rxy13 <- mean(D$Rxy13[D_index])
+Dxy02 <- mean(D$XY02[D_index])
+Dxy13 <- mean(D$XY13[D_index])
+#--------
 #AfileIndex <- seq(findPrefix(min(SAM45df$mjd_st), prefix), findPrefix(max(SAM45df$mjd_st), prefix))
 on_C00  <- integSegment(prefix, chNum, ipnum, 'C', 0, onMJD )
 on_C01  <- integSegment(prefix, chNum, ipnum, 'C', 1, onMJD )
@@ -52,6 +60,11 @@ off_A00 <- integSegment(prefix, chNum, ipnum, 'A', 0, offMJD )
 off_A01 <- integSegment(prefix, chNum, ipnum, 'A', 1, offMJD )
 off_A02 <- integSegment(prefix, chNum, ipnum, 'A', 2, offMJD )
 off_A03 <- integSegment(prefix, chNum, ipnum, 'A', 3, offMJD )
+#-------- Tsys at each scan
+Tsys00 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys00[OnIndex], spar=0.5), scanTime(onMJD))$y
+Tsys01 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys01[OnIndex], spar=0.5), scanTime(onMJD))$y
+Tsys02 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys02[OnIndex], spar=0.5), scanTime(onMJD))$y
+Tsys03 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys03[OnIndex], spar=0.5), scanTime(onMJD))$y
 
 #pointingNum <- floor((length(offMJD$stopMjd) - 1) / 2)
 #for index in 1:pointingNum{
