@@ -95,6 +95,7 @@ lines( bunch_vec(veloc0[plotRange],plotBunch)-0.5*plotBunch*chSep, bunch_vec(Sto
 lines( bunch_vec(veloc0[plotRange], fitBunch), bunch_vec(predStokesI, fitBunch), col='orange')
 legend("topleft", legend=labels, col=cols, lty=rep(1,3))
 abline(h=0, col='gray')
+cat(sprintf("Peak I = %5.2f +- %5.3f K\n", max(bunch_vec(predStokesI, fitBunch)), sd( StokesI[baseRange] )/sqrt(plotBunch) ))
 #-------- Plot dI/df 
 #plot(freq[plotRange], predStokesV, type='l', xlab='Frequency [MHz]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
 plot(veloc0[plotRange], predStokesV, type='l', xlab='LSR Velocity [km/s]', ylab='dI/df [K/Hz]', main=sprintf('%s %s', args$srcName, args$lineName), col='red')
