@@ -16,15 +16,17 @@ if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 #-------- Parse command-line arguments
 parseArg <- function( args ){
     argNum <- length(args)
-    smoothWidth <- 128      # Set Default Value
+    lineFreq <- numeric(0)
     for( index in 1:argNum ){
         if(substr(args[index], 1,2) == "-S"){ SAM45File <- substring(args[index], 3)}
         if(substr(args[index], 1,2) == "-D"){ DtermFile <- substring(args[index], 3)}
         if(substr(args[index], 1,2) == "-B"){ BPFile    <- substring(args[index], 3)}
         if(substr(args[index], 1,2) == "-W"){ WGFile    <- substring(args[index], 3)}
         if(substr(args[index], 1,2) == "-T"){ ThreshFile <- substring(args[index], 3)}
+        if(substr(args[index], 1,2) == "-l"){ lineFreq[1] <- as.numeric(substring(args[index], 3))}
+        if(substr(args[index], 1,2) == "-L"){ lineFreq[2] <- as.numeric(substring(args[index], 3))}
     }
-    return( list(SAM45File = SAM45File, DtermFile = DtermFile, BPFile = BPFile, WGFile = WGFile, ThreshFile = ThreshFile) )
+    return( list(SAM45File = SAM45File, DtermFile = DtermFile, BPFile = BPFile, WGFile = WGFile, ThreshFile = ThreshFile, lineFreq = lineFreq) )
 }
 
 #-------- Procedures
@@ -118,8 +120,7 @@ StokesV13 <- Im(Tx13) - Im(Dxy13)* StokesI13
 RHCPspec <- (StokesI02 + StokesV02 + StokesI13 + StokesV13)/4
 LHCPspec <- (StokesI02 - StokesV02 + StokesI13 - StokesV13)/4
 #-------- Line Flux
-lineRange <- c(1.58, 1.8)
-chRange <- which( freq > lineRange[1] & freq < lineRange[2] )
+chRange <- which( freq > args$lineFreq[1] & freq < args$lineFreq[2] )
 RHCPflux <- apply( RHCPspec[chRange,], 2, sum)
 LHCPflux <- apply( LHCPspec[chRange,], 2, sum)
 #-------- Pointing
@@ -160,4 +161,9 @@ for(scan_index in 1:pointingNum){
     text_sd <- sprintf('(%5.2f %5.2f)', coef(Rfit)['x0'] - coef(Lfit)['x0'], coef(Rfit)['y0'] - coef(Lfit)['y0']) 
     cat(text_sd); cat('\n')
 }
-save(SquintDF, file=sprintf('%s.Squint.Rdata', prefix[1]))
+save(SquintDF, file=sprintf('%s.Squint.Rdata', args$SAM45File))
+pdf(sprintf("%s.Squint.pdf", args$SAM45File))
+plot( bunch_vec(freq, 32), bunch_vec(RHCPspec[,posIndex[5]], 32), type='s', col='red', ylim=c(-1, max(max(RHCPspec[chRange,]))), xlab='Frequency [MHz]', ylab='Ta* [K]', main=args$SAM45File)
+lines(bunch_vec(freq, 32), bunch_vec(LHCPspec[,posIndex[5]], 32), type='s', col='blue')
+abline(v=args$lineFreq[1]); abline(v=args$lineFreq[2])
+dev.off()
