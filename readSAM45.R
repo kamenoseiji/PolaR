@@ -182,6 +182,29 @@ readSAM45 <- function(fname){
 }
 
 #-------- Function to find Scan Pattern from SAM45 Log
+scanPointing <- function(SAM45File){
+	SAM45Log <- readSAM45(SAM45File)
+	head1 <- SAM45Log[[1]]; head2 <- SAM45Log[[2]]; SAM45spec <- SAM45Log[[3]]; SAM45df <- SAM45Log[[4]]
+	arrayIndex <- which(SAM45df$cary_name == SAM45df$cary_name[1])
+	mjdRange <- min( SAM45df$mjd_st[arrayIndex] ):max( SAM45df$mjd_ed[arrayIndex] )
+	#-------- Scan Type
+	scanLen  <- length(mjdRange)
+	ScanType <- AZ <- EL <- dAZ <- dEL <- Vrad <- rep( NA, scanLen )
+	for(index in arrayIndex){
+		timeIndex <- which( mjdRange >= SAM45df$mjd_st[index] & mjdRange <= SAM45df$mjd_ed[index] )
+		ScanType[timeIndex] <- as.character(SAM45df$cscan_type[index])
+		AZ[timeIndex] <- SAM45df$AZ[index]
+		EL[timeIndex] <- SAM45df$EL[index]
+		dAZ[timeIndex] <- SAM45df$dAZ[index]
+		dEL[timeIndex] <- SAM45df$dEL[index]
+		Vrad[timeIndex] <- SAM45df$Vrad[index]
+	}
+	scanDF <- data.frame(mjdRange, ScanType, AZ, EL, dAZ, dEL, Vrad)
+	DF_label <- c('mjdSec', 'scanType', 'AZ', 'EL', 'dAZ', 'dEL', 'Vrad')
+	names(scanDF) <- DF_label
+	return(scanDF)
+}
+#-------- Function to find Scan Pattern from SAM45 Log
 scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 	load(threshFile)
 	SAM45Log <- readSAM45(SAM45File)
@@ -255,4 +278,26 @@ Apower <- function(fname){
 	chNum <- nrow(A); chRange <- floor(0.05*chNum):floor(0.95*chNum)
 	return( apply(A[chRange,], 2, mean))
 }
-
+#-------- Function to calculate Tsys from Scan Pattern
+scanTsys <- function(Scan, Tamb){
+    nameList <- names(Scan)
+    R_index <- which(Scan$scanType == 'R')
+    #-------- Median Window Filter
+    medR <- median( Scan$power00[R_index])
+    R_index <- which( abs( (Scan$power00 - medR)/medR ) < 0.02 )
+    #-------- On and Off scans
+    index <- which(Scan$scanType == 'OFF' | Scan$scanType == 'ON')
+    OutOfR_index <- which( Scan$mjdSec > max(Scan$mjdSec[R_index]))
+    power_ptr <- grep('power', nameList); IFnum <- length(power_ptr)
+    for(IF_index in 1:IFnum){
+        IF_ID <- as.integer(strsplit(nameList[power_ptr[IF_index]], "power")[[1]][2])
+        Tsys   <- rep(NA, length(Scan$mjdSec))
+        RPower <- predict(smooth.spline(Scan$mjdSec[R_index], Scan[[power_ptr[IF_index]]][R_index], spar=1.0), Scan$mjdSec)$y
+        RPower[OutOfR_index] <- RPower[max(R_index)]
+        Tsys[index]  <- Tamb / (RPower[index] / Scan[[power_ptr[IF_index]]][index] - 1.0)
+        Scan <- cbind(Scan, Tsys)
+        nameList <- append(nameList, sprintf('Tsys%02d', IF_ID))
+    }
+    names(Scan) <- nameList
+    return(Scan)
+}

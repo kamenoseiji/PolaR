@@ -122,6 +122,30 @@ TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
 	return(baseTsys* (OnPower - basePower) / basePower)
 }
 
+#-------- On - Off subtraction for Spectral Data
+TaCalSpec <- function(OnSpec, OffSpec, mjdOn, mjdOff, Tsys, weight, mitigCH){
+    #-------- Parameters of Smoothed Bandpass Calibration
+    chNum <- nrow( OnSpec )
+    smoothWidth <- 512; knotNum <- floor(chNum / smoothWidth)
+    TA <- matrix( nrow=chNum, ncol=length(mjdOn) )
+    for( timeIndex in 1:length(mjdOn) ){
+        #-------- if scan starts on-source
+        tryCatch(
+            { off_before <- max(which( mjdOff < mjdOn[timeIndex] ))},
+            warning = function(e){ off_before = which.min(mjdOff)},
+            silent = TRUE )
+        #-------- if scan ends on-source
+        tryCatch(
+            { off_after  <- min(which( mjdOff > mjdOn[timeIndex] )) },
+            warning = function(e){ off_after = which.max(mjdOff)},
+            silent = TRUE )
+        #
+        #---- Off-source power spectra
+        SmoothOffSpec <- SBCspec( 0.5*(OffSpec[,off_before] + OffSpec[,off_after]), knotNum, weight, mitigCH)
+        TA[,timeIndex] <- Tsys[timeIndex]* (SPmitigation(OnSpec[,timeIndex], mitigCH) - SmoothOffSpec)/SmoothOffSpec
+    }
+    return(TA)
+}
 #-------- On - Off subtraction for complex power
 TxCal <- function(OnXpower, OffXpower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
 	if( length(OffTime) > 3){
@@ -136,3 +160,80 @@ TxCal <- function(OnXpower, OffXpower, OffPower, Tsys, OnTime, OffTime, TsysTime
 	baseTsys  <- predict(smooth.spline( TsysTime, Tsys, spar=0.5 ), OnTime)$y
 	return(baseTsys* (OnXpower - baseXpower) / basePower)
 }
+#-------- On - Off subtraction for complex power
+TxCalSpec <- function(OnXspec, OffXspec, OffSpec0, OffSpec1, mjdOn, mjdOff, Tsys, weight, mitigCH ){
+    # Cross-power spectra are assumed to be calibrated in terms of Delay and Phase
+    chNum <- nrow( OnXspec )
+    mitigCH <- c(7256, 16385, 32769, 47522)
+    flagCH <- c(1, 2, 4, mitigCH)
+    weight <- rep(1, chNum); weight[flagCH] <- 0.0
+    availCH <- which(weight == 1.0)
+    smoothWidth <- 512; knotNum <- floor(chNum / smoothWidth)
+    TX <- matrix( nrow=chNum, ncol=length(mjdOn) )
+    for( timeIndex in 1:length(mjdOn) ){
+        #-------- if scan starts on-source
+        tryCatch(
+            { off_before <- max(which( mjdOff < mjdOn[timeIndex] ))},
+            warning = function(e){ off_before = which.min(mjdOff)},
+            silent = TRUE )
+        #-------- if scan ends on-source
+        tryCatch(
+            { off_after  <- min(which( mjdOff > mjdOn[timeIndex] )) },
+            warning = function(e){ off_after = which.max(mjdOff)},
+            silent = TRUE )
+        #
+        #---- Off-source power spectra
+        SmoothOffSpec <- sqrt( SBCspec( 0.5*(OffSpec0[,off_before] + OffSpec0[,off_after]), knotNum, weight, mitigCH)* SBCspec( 0.5*(OffSpec1[,off_before] + OffSpec1[,off_after]), knotNum, weight, mitigCH) )
+        #---- Off-source cross-power spectra
+        SmoothOffXspec <- complex(
+            real = SBCspec(0.5*Re(OffXspec[,off_before] + OffXspec[,off_after]), knotNum, weight, mitigCH),
+            imaginary = SBCspec(0.5*Im(OffXspec[,off_before] + OffXspec[,off_after]), knotNum, weight, mitigCH))
+        #---- Scaling
+        TX[, timeIndex] <- Tsys[timeIndex]* (OnXspec[,timeIndex] - SmoothOffXspec) / SmoothOffSpec
+    }
+    return(TX)
+}
+#-------- BP Cal
+BPphsCal <- function( SPEC, BP ){
+    BPphs <- complex( modulus=1, argument=-Arg(BP))
+    return( SPEC* BPphs )
+}
+#-------- Function to Calibrate Delay and Phase
+DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
+    temp <- scanSpec
+    phase <- atan2(predict(ImFit, mjdSec)$y, predict(ReFit, mjdSec)$y)
+    delay <- predict(delayFit, mjdSec)$y
+    for(timeIndex in 1:ncol(scanSpec)){
+        scanSpec[,timeIndex] <- delayPhase_cal(temp[,timeIndex], delay[timeIndex], -phase[timeIndex])
+    }
+    return(scanSpec)
+}
+#-------- Spectral Mitigation
+SPmitigation <- function( spec, SPCH ){
+    for(index in 1:length(SPCH)){
+        spec[SPCH[index]] <- mean(spec[c((SPCH[index]-8):(SPCH[index]-1), (SPCH[index]+1):(SPCH[index]+8))])
+    }
+    return(spec)
+}
+#-------- Smoothed Bandpass Calibration
+SBCspec <- function( spec, knotNum, weight, mitigCH){
+    return(predict(smooth.spline( SPmitigation(spec, mitigCH), w=weight, all.knots=F, nknots=knotNum), 1:length(spec))$y)
+}
+#-------- ScanTime
+scanTime   <- function(MJD_df){ return((MJD_df[[1]] + MJD_df[[2]])/2 ) }
+scanIntegT <- function(MJD_df){ return( MJD_df[[2]] - MJD_df[[2]] + 1) }
+#-------- Doppler Tracking
+deDopp <- function( spec, chShift ){
+    timeNum <- ncol(spec)
+    chNum <- nrow(spec)
+    for( time_index in 1:timeNum ){
+        if(chShift[time_index] > 0){
+            spec[,time_index] <- c(spec[(chNum - chShift[time_index] + 1):chNum, time_index], spec[1:(chNum - chShift[time_index]), time_index])
+        }
+        if(chShift[time_index] < 0){
+            spec[,time_index] <- c(spec[(chShift[time_index] + 1):chNum, time_index], spec[1:chShift[time_index], time_index])
+        }
+    }
+    return(spec)
+}
+
