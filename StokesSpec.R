@@ -131,7 +131,6 @@ StokesU13 <- 0.5* (rowSums(Ta01* sn* weight1)/sum(weight1) - rowSums(Ta03* sn* w
 lineRange <- c(0.1, 2.6, 2.8, 3.9)
 chRange <- c( which(freq > lineRange[1] & freq < lineRange[2]), which(freq > lineRange[3] & freq < lineRange[4]))
 
-knotNum <- floor(length(freq) / 256)
 weight <- rep(0.0, length(freq)); weight[chRange] <- 1.0
 fitStokesI02 <- smooth.spline(freq, StokesI02, w=weight, all.knots=F, nknots=knotNum)
 fitStokesI13 <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=knotNum)
