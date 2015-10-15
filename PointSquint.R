@@ -124,13 +124,15 @@ chRange <- which( freq > args$lineFreq[1] & freq < args$lineFreq[2] )
 RHCPflux <- apply( RHCPspec[chRange,], 2, sum)
 LHCPflux <- apply( LHCPspec[chRange,], 2, sum)
 #-------- Pointing
-posAz <- posEl <- numeric(0)
+cAz <- cEl <- posAz <- posEl <- numeric(0)
 for(scan_index in 1:length(onMJD$stopMjd)){
     posAz[scan_index] <- Scan$dAZ[Scan$mjdSec == floor(scanTime(onMJD)[scan_index])]
     posEl[scan_index] <- Scan$dEL[Scan$mjdSec == floor(scanTime(onMJD)[scan_index])]
+    cAz[scan_index] <- Scan$AZ[Scan$mjdSec == floor(scanTime(onMJD)[scan_index])]
+    cEl[scan_index] <- Scan$EL[Scan$mjdSec == floor(scanTime(onMJD)[scan_index])]
 }
 pointingNum <- floor((length(offMJD$stopMjd) - 1) / 2)
-cat('RCP dAZ   err     dEL   err    Peak  FWHM  LCP  dAZ   err     dEL   err    Peak  FWHM  Squint(Az,El) \n')
+cat('#  AZ   EL  |R dAZ   err     dEL   err    Peak  FWHM   |L  dAZ   err     dEL   err    Peak  FWHM  Squint(Az,El) \n')
 for(scan_index in 1:pointingNum){
     posIndex <- (6*scan_index - 5):(6*scan_index)
     posOff <- Scan$dAZ[Scan$mjdSec == floor(scanTime(offMJD)[scan_index])]
@@ -143,18 +145,20 @@ for(scan_index in 1:pointingNum){
     Lfit <- nls( formula = Z ~ a* exp( -0.5*( (x - x0)^2 + (y - y0)^2 )/ sigma^2), data = LDF, start=list(a=max(RDF$Z), x0=0.0, y0=0.0, sigma=max(posAz[posIndex])))
     if( scan_index == 1){
         SquintDF <- data.frame(
+            EL=cEl[scan_index],
             Raz=coef(Rfit)['x0'], Rel=coef(Rfit)['y0'], Rpeak=coef(Rfit)['a'], RFWHM=2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'],
             Raze=sqrt(vcov(Rfit)['x0','x0']), Rele=sqrt(vcov(Rfit)['y0','y0']),
             Laz=coef(Lfit)['x0'], Lel=coef(Lfit)['y0'], Lpeak=coef(Lfit)['a'], LFWHM=2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'],
             Laze=sqrt(vcov(Lfit)['x0','x0']), Lele=sqrt(vcov(Lfit)['y0','y0']))
     } else {
         SquintDF <- rbind(SquintDF,  data.frame(
+            EL=cEl[scan_index],
             Raz=coef(Rfit)['x0'], Rel=coef(Rfit)['y0'], Rpeak=coef(Rfit)['a'], RFWHM=2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'],
             Raze=sqrt(vcov(Rfit)['x0','x0']), Rele=sqrt(vcov(Rfit)['y0','y0']),
             Laz=coef(Lfit)['x0'], Lel=coef(Lfit)['y0'], Lpeak=coef(Lfit)['a'], LFWHM=2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'],
             Laze=sqrt(vcov(Lfit)['x0','x0']), Lele=sqrt(vcov(Lfit)['y0','y0'])))
     }
-    text_sd <- sprintf('%d %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', scan_index, coef(Rfit)['x0'], sqrt(vcov(Rfit)['x0','x0']), coef(Rfit)['y0'], sqrt(vcov(Rfit)['y0','y0']), coef(Rfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'])
+    text_sd <- sprintf('%d %4.1f %4.1f %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', scan_index, cAz[scan_index], cEl[scan_index], coef(Rfit)['x0'], sqrt(vcov(Rfit)['x0','x0']), coef(Rfit)['y0'], sqrt(vcov(Rfit)['y0','y0']), coef(Rfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'])
     cat(text_sd)
     text_sd <- sprintf('   %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', coef(Lfit)['x0'], sqrt(vcov(Lfit)['x0','x0']), coef(Lfit)['y0'], sqrt(vcov(Lfit)['y0','y0']), coef(Lfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'])
     cat(text_sd)
