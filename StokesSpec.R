@@ -27,9 +27,11 @@ parseArg <- function( args ){
         if(substr(args[index], 1,2) == "-B"){ SqY <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam Squint (RHCP-LHCP) in EL [arcsec]
         if(substr(args[index], 1,2) == "-v"){ VgRA  <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in RA [Hz/arcsec]
         if(substr(args[index], 1,2) == "-V"){ VgDEC <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in DEC [Hz/arcsec]
+        if(substr(args[index], 1,2) == "-p"){ minPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
+        if(substr(args[index], 1,2) == "-P"){ maxPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
     }
     fileName <- args[(argNum - fileNum + 1):argNum]
-    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, fileName = fileName, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC) )
+    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
 }
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
@@ -91,6 +93,7 @@ EL <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$EL[OnIndex], spar=0.5), s
 Pang <- -azel2pa(AZ, EL) + EL*pi/180 - pi/2 
 cs <- cos(Pang)
 sn <- sin(Pang)
+PAindex <- which( (azel2pa(AZ, EL) > args$minPA) & (azel2pa(AZ, EL) < args$maxPA) )
 #-------- Beam Squint and Velocity Gradient
 BeamSquintAzEl <- c(args$SqX, args$SqY)    # arcsec
 VelocGradRADEC <- c(args$VgRA, args$VgDEC)       # Hz / arcsec
