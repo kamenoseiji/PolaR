@@ -25,8 +25,8 @@ parseArg <- function( args ){
         if(substr(args[index], 1,2) == "-D"){ DtermFile <- substring(args[index], 3);  fileNum <- fileNum - 1}
         if(substr(args[index], 1,2) == "-b"){ SqX <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam Squint (RHCP-LHCP) in AZ [arcsec]
         if(substr(args[index], 1,2) == "-B"){ SqY <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam Squint (RHCP-LHCP) in EL [arcsec]
-        if(substr(args[index], 1,2) == "-g"){ VgRA  <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in RA [Hz/arcsec]
-        if(substr(args[index], 1,2) == "-G"){ VgDEC <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in DEC [Hz/arcsec]
+        if(substr(args[index], 1,2) == "-v"){ VgRA  <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in RA [Hz/arcsec]
+        if(substr(args[index], 1,2) == "-V"){ VgDEC <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in DEC [Hz/arcsec]
     }
     fileName <- args[(argNum - fileNum + 1):argNum]
     return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, fileName = fileName, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC) )
