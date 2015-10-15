@@ -27,15 +27,16 @@ parseArg <- function( args ){
         if(substr(args[index], 1,2) == "-B"){ SqY <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam Squint (RHCP-LHCP) in EL [arcsec]
         if(substr(args[index], 1,2) == "-v"){ VgRA  <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in RA [Hz/arcsec]
         if(substr(args[index], 1,2) == "-V"){ VgDEC <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in DEC [Hz/arcsec]
-        if(substr(args[index], 1,2) == "-p"){ minPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
-        if(substr(args[index], 1,2) == "-P"){ maxPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
+        # if(substr(args[index], 1,2) == "-p"){ minPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
+        # if(substr(args[index], 1,2) == "-P"){ maxPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
     }
     fileName <- args[(argNum - fileNum + 1):argNum]
-    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
+    #return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
+    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, fileName = fileName) )
 }
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
-#args <- list(smoothWidth = 64, DtermFile = '2015074035321.Dterm.Rdata', fileName = c('2015074040644.Scan.Rdata', '2015074040721.SPEC.Rdata', '2015074030852.WG.Rdata', '2015074030852.BP.Rdata'))
+#args <- list(smoothWidth = 64, SqX = -2.06, SqY = 0.0, VgRA = 152, VgDEC = 115, DtermFile = '2015075100322.Dterm.Rdata', fileName = c('2015075034443.Scan.Rdata', '2015075034519.SPEC.Rdata', '2015075031846.WG.Rdata', '2015075031846.BP.Rdata'))
 setwd('.')
 cat('Loading spectral data...\n')
 load(args$fileName[1])	 #Load Scan file
@@ -93,10 +94,10 @@ EL <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$EL[OnIndex], spar=0.5), s
 Pang <- -azel2pa(AZ, EL) + EL*pi/180 - pi/2 
 cs <- cos(Pang)
 sn <- sin(Pang)
-PAindex <- which( (azel2pa(AZ, EL) > args$minPA) & (azel2pa(AZ, EL) < args$maxPA) )
+# PAindex <- which( (azel2pa(AZ, EL) > args$minPA) & (azel2pa(AZ, EL) < args$maxPA) )
 #-------- Beam Squint and Velocity Gradient
-BeamSquintAzEl <- c(args$SqX, args$SqY)    # arcsec
-VelocGradRADEC <- c(args$VgRA, args$VgDEC)       # Hz / arcsec
+BeamSquintAzEl <- c(args$SqX,  args$SqY)    # arcsec
+VelocGradRADEC <- c(args$VgRA, args$VgDEC)  # Hz / arcsec
 #BeamSquintAzEl <- c(-1.67, 1.18)    # arcsec
 #VelocGradRADEC <- c(152, 115)       # Hz / arcsec
 #-------- Amplitude calibration of Autocorr
@@ -137,20 +138,22 @@ StokesQ13 <- 0.5* (rowSums(Ta01* cs* weight1)/sum(weight1) - rowSums(Ta03* cs* w
 StokesU02 <- 0.5* (rowSums(Ta00* sn* weight0)/sum(weight0) - rowSums(Ta02* sn* weight2)/sum(weight2)) + rowSums((Re(Tx02) - Re(Dxy02)* StokesI02)* cs* weight02) / sum(weight02)
 StokesU13 <- 0.5* (rowSums(Ta01* sn* weight1)/sum(weight1) - rowSums(Ta03* sn* weight3)/sum(weight3)) + rowSums((Re(Tx13) - Re(Dxy13)* StokesI13)* cs* weight13) / sum(weight13)
 
-lineRange <- c(0.1, 2.6, 2.8, 3.9)
-chRange <- c( which(freq > lineRange[1] & freq < lineRange[2]), which(freq > lineRange[3] & freq < lineRange[4]))
+#lineRange <- c(0.1, 2.6, 2.8, 3.9)
+#chRange <- c( which(freq > lineRange[1] & freq < lineRange[2]), which(freq > lineRange[3] & freq < lineRange[4]))
 
 weight <- rep(0.0, length(freq)); weight[chRange] <- 1.0
 fitStokesI02 <- smooth.spline(freq, StokesI02, w=weight, all.knots=F, nknots=knotNum)
 fitStokesI13 <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=knotNum)
 for(scan_index in 1:length(Tsys00)){
-    M <- matrix(nrow=2, ncol=2, c(-cs[scan_index], -sn[scan_index], -sn[scan_index], cs[scan_index]))
-    Fshift <- t(M %*% BeamSquintAzEl) %*% VelocGradRADEC
-    cat(sprintf("Scan%d PA=%5.1f rad  Fshift=%5.1f Hz\n", scan_index, Pang[scan_index], Fshift))
-    fakeStokesV02 <- predict(fitStokesI02, (freq + 0.5e-6*Fshift))$y - predict(fitStokesI02, (freq - 0.5e-6*Fshift))$y
-    fakeStokesV13 <- predict(fitStokesI13, (freq + 0.5e-6*Fshift))$y - predict(fitStokesI13, (freq - 0.5e-6*Fshift))$y
-    Tx02[chRange,scan_index] = Tx02[chRange,scan_index] + 1.0i * fakeStokesV02[chRange]
-    Tx13[chRange,scan_index] = Tx13[chRange,scan_index] + 1.0i * fakeStokesV13[chRange]
+    beamRot <- -pi* EL[scan_index]/180.0 + azel2pa(AZ[scan_index], EL[scan_index])
+    csB <- cos(beamRot); snB <- sin(beamRot)
+    Fshift <- -VelocGradRADEC[1]* (csB* BeamSquintAzEl[1] - snB* BeamSquintAzEl[1]) + VelocGradRADEC[2]* (snB* BeamSquintAzEl[1] + csB* BeamSquintAzEl[1])
+    cat(sprintf("Scan%d PA=%5.1f BeamRot = %5.1f Fshift=%5.1f Hz\n", scan_index, Pang[scan_index], beamRot, Fshift))
+    Fshift <- Fshift * 0.5e-6
+    fakeStokesV02 <- predict(fitStokesI02, (freq + Fshift))$y - predict(fitStokesI02, (freq - Fshift))$y
+    fakeStokesV13 <- predict(fitStokesI13, (freq + Fshift))$y - predict(fitStokesI13, (freq - Fshift))$y
+    Tx02[chRange,scan_index] = Tx02[chRange,scan_index] + 0.5i * fakeStokesV02[chRange]
+    Tx13[chRange,scan_index] = Tx13[chRange,scan_index] + 0.5i * fakeStokesV13[chRange]
 }
 StokesV02 <- rowSums(Im(Tx02)* weight02)/sum(weight02) - Im(Dxy02)* StokesI02
 StokesV13 <- rowSums(Im(Tx13)* weight13)/sum(weight13) - Im(Dxy13)* StokesI13
