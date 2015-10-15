@@ -52,7 +52,8 @@ freq <- (0:(chNum-1))/chNum* 4.0	# MHz
 chSep <- 4.0 / chNum
 veloc0 <- (args$trackFreq - freq) / args$restFreq * 299792.458 + args$trackVel
 SDrange <- 8193:16384
-JyK <- 3.0 # Jy per K
+# JyK <- 3.0 # Jy per K
+JyK <- 1.0 # Jy per K
 if(args$IF == 2){
     StokesI <- StokesI13* JyK
     StokesQ <- StokesQ13* JyK
