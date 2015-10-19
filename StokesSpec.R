@@ -27,12 +27,11 @@ parseArg <- function( args ){
         if(substr(args[index], 1,2) == "-B"){ SqY <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam Squint (RHCP-LHCP) in EL [arcsec]
         if(substr(args[index], 1,2) == "-v"){ VgRA  <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in RA [Hz/arcsec]
         if(substr(args[index], 1,2) == "-V"){ VgDEC <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in DEC [Hz/arcsec]
-        # if(substr(args[index], 1,2) == "-p"){ minPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
-        # if(substr(args[index], 1,2) == "-P"){ maxPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
+        if(substr(args[index], 1,2) == "-p"){ minPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
+        if(substr(args[index], 1,2) == "-P"){ maxPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
     }
     fileName <- args[(argNum - fileNum + 1):argNum]
-    #return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
-    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, fileName = fileName) )
+    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
 }
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
@@ -94,7 +93,7 @@ EL <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$EL[OnIndex], spar=0.5), s
 Pang <- -azel2pa(AZ, EL) + EL*pi/180 - pi/2 
 cs <- cos(Pang)
 sn <- sin(Pang)
-# PAindex <- which( (azel2pa(AZ, EL) > args$minPA) & (azel2pa(AZ, EL) < args$maxPA) )
+PAindex <- which( (azel2pa(AZ, EL) > args$minPA) & (azel2pa(AZ, EL) < args$maxPA) )
 #-------- Beam Squint and Velocity Gradient
 BeamSquintAzEl <- c(args$SqX,  args$SqY)    # arcsec
 VelocGradRADEC <- c(args$VgRA, args$VgDEC)  # Hz / arcsec
@@ -123,12 +122,12 @@ Tx13 <- TxCalSpec(
 #Tx02 <- deDopp(Tx02, chShift)
 #-------- Time Integration to determine Stokes spectrum
 cat('--- Full Stokes with Beam Squint Correction\n')
-weight0 <- 1.0 / Tsys00^2
-weight1 <- 1.0 / Tsys01^2
-weight2 <- 1.0 / Tsys02^2
-weight3 <- 1.0 / Tsys03^2
-weight02 <- 1.0 / (Tsys00 * Tsys02)
-weight13 <- 1.0 / (Tsys01 * Tsys03)
+weight0 <- rep(0.0, length(Tsys00)); weight0[PAindex] <- 1.0 / Tsys00[PAindex]^2
+weight1 <- rep(0.0, length(Tsys01)); weight1[PAindex] <- 1.0 / Tsys01[PAindex]^2
+weight2 <- rep(0.0, length(Tsys02)); weight2[PAindex] <- 1.0 / Tsys02[PAindex]^2
+weight3 <- rep(0.0, length(Tsys03)); weight3[PAindex] <- 1.0 / Tsys03[PAindex]^2
+weight02 <- rep(0.0, length(Tsys00)); weight02[PAindex] <- 1.0 / (Tsys00[PAindex] * Tsys02[PAindex])
+weight13 <- rep(0.0, length(Tsys01)); weight13[PAindex] <- 1.0 / (Tsys01[PAindex] * Tsys03[PAindex])
 StokesI02 <- 0.5*(rowSums(Ta00* weight0)/sum(weight0) + rowSums(Ta02* weight2)/sum(weight2))
 StokesI13 <- 0.5*(rowSums(Ta01* weight1)/sum(weight1) + rowSums(Ta03* weight3)/sum(weight3))
 
