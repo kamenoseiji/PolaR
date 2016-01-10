@@ -29,7 +29,7 @@ parseArg <- function( args ){
 
 #-------- Procedures
 #args <- parseArg(commandArgs(trailingOnly = T))
-args <- parseArg(c('-S2015305092333.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.07', '-L2.35'))
+args <- parseArg(c('-S2015305092334.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.07', '-L2.35'))
 #setwd('.')
 setwd('/Volumes/SSD/PolariS/20151101')
 load(args$WGFile)
@@ -49,8 +49,8 @@ for(index in 1:length(A00fileList)){
 chNum <- AfileSize$chnum
 freq <- (0:(chNum-1))/chNum* 4.0    # MHz
 chSep <- 4.0 / chNum
-mitigCH <- c(23359, 32769)
-flagCH <- unique(c(1, 2, 4, mitigCH))
+mitigCH <- c(3599:3607)
+flagCH <- unique(c(1, 2, 4, 5, mitigCH))
 weight <- rep(1, chNum); weight[flagCH] <- 0.0
 #-------- List IF ID of PolariS data
 A00fileList <- system(  sprintf('ls %s.A.*', prefix[1]), intern=T )
@@ -80,7 +80,6 @@ Tsys00 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys00[OnIndex], spar
 Tsys01 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys01[OnIndex], spar=0.5), scanTime(onMJD))$y
 Tsys02 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys02[OnIndex], spar=0.5), scanTime(onMJD))$y
 Tsys03 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys03[OnIndex], spar=0.5), scanTime(onMJD))$y
-if(0){
 #-------- Parallactic angle
 AZ <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$AZ[OnIndex], spar=0.5), scanTime(onMJD))$y
 EL <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$EL[OnIndex], spar=0.5), scanTime(onMJD))$y
@@ -95,17 +94,15 @@ Ta03 <- TaCalSpec(on_A03, off_A03, scanTime(onMJD), scanTime(offMJD), Tsys03, we
 #-------- Delay, phase, bandpass, and amplitude calibration for CrossCorr
 #PcalCH02 <- apply( abs(XY[2:chNum,]), 2, which.max) + 1
 #PcalPhs02 <- Arg( mean(XY[((pcalCH[index]-1):(pcalCH[index]+1)),])} )
-
-
-
-Tx02 <- TxCalSpec(
-    DelayPhaseCal( BPphsCal(on_C00, BP$BP00), scanTime(onMJD), delay00Fit, Re00Fit, Im00Fit),
-    DelayPhaseCal( BPphsCal(off_C00, BP$BP00), scanTime(offMJD), delay00Fit, Re00Fit, Im00Fit),
-    off_A00, off_A02, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys00 * Tsys02), weight, mitigCH)
-Tx13 <- TxCalSpec(
-    DelayPhaseCal( BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit),
-    DelayPhaseCal( BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit),
-    off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys03), weight, mitigCH)
+#Tx02 <- TxCalSpec(
+#    DelayPhaseCal( BPphsCal(on_C00, BP$BP00), scanTime(onMJD), delay00Fit, Re00Fit, Im00Fit),
+#    DelayPhaseCal( BPphsCal(off_C00, BP$BP00), scanTime(offMJD), delay00Fit, Re00Fit, Im00Fit),
+#    off_A00, off_A02, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys00 * Tsys02), weight, mitigCH)
+#Tx13 <- TxCalSpec(
+#    DelayPhaseCal( BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit),
+#    DelayPhaseCal( BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit),
+#    off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys03), weight, mitigCH)
+if(0){
 StokesI02 <- 0.5*(Ta00 + Ta02)
 StokesI13 <- 0.5*(Ta01 + Ta03)
 StokesV02 <- Im(Tx02) - Im(Dxy02)* StokesI02

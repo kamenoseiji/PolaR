@@ -126,7 +126,7 @@ TaCal <- function(OnPower, OffPower, Tsys, OnTime, OffTime, TsysTime ){
 TaCalSpec <- function(OnSpec, OffSpec, mjdOn, mjdOff, Tsys, weight, mitigCH){
     #-------- Parameters of Smoothed Bandpass Calibration
     chNum <- nrow( OnSpec )
-    smoothWidth <- 512; knotNum <- floor(chNum / smoothWidth)
+    knotNum <- 120
     TA <- matrix( nrow=chNum, ncol=length(mjdOn) )
     for( timeIndex in 1:length(mjdOn) ){
         #-------- if scan starts on-source
@@ -164,11 +164,11 @@ TxCal <- function(OnXpower, OffXpower, OffPower, Tsys, OnTime, OffTime, TsysTime
 TxCalSpec <- function(OnXspec, OffXspec, OffSpec0, OffSpec1, mjdOn, mjdOff, Tsys, weight, mitigCH ){
     # Cross-power spectra are assumed to be calibrated in terms of Delay and Phase
     chNum <- nrow( OnXspec )
-    mitigCH <- c(7256, 16385, 32769, 47522)
-    flagCH <- c(1, 2, 4, mitigCH)
-    weight <- rep(1, chNum); weight[flagCH] <- 0.0
-    availCH <- which(weight == 1.0)
-    smoothWidth <- 512; knotNum <- floor(chNum / smoothWidth)
+    # mitigCH <- c(7256, 16385, 32769, 47522)
+    #flagCH <- c(1, 2, 4, mitigCH)
+    # weight <- rep(1, chNum); weight[flagCH] <- 0.0
+    # availCH <- which(weight == 1.0)
+    knotNum <- 120
     TX <- matrix( nrow=chNum, ncol=length(mjdOn) )
     for( timeIndex in 1:length(mjdOn) ){
         #-------- if scan starts on-source
