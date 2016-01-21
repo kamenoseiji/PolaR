@@ -29,7 +29,8 @@ parseArg <- function( args ){
 
 #-------- Procedures
 #args <- parseArg(commandArgs(trailingOnly = T))
-args <- parseArg(c('-S2015305092334.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.07', '-L2.35'))
+#args <- parseArg(c('-S2015305092334.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.07', '-L2.35'))
+args <- parseArg(c('-S2015305092333.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.20', '-L2.21'))
 #setwd('.')
 setwd('/Volumes/SSD/PolariS/20151101')
 load(args$WGFile)
@@ -92,21 +93,19 @@ Ta01 <- TaCalSpec(on_A01, off_A01, scanTime(onMJD), scanTime(offMJD), Tsys01, we
 Ta02 <- TaCalSpec(on_A02, off_A02, scanTime(onMJD), scanTime(offMJD), Tsys02, weight, mitigCH)
 Ta03 <- TaCalSpec(on_A03, off_A03, scanTime(onMJD), scanTime(offMJD), Tsys03, weight, mitigCH)
 #-------- Delay, phase, bandpass, and amplitude calibration for CrossCorr
-#PcalCH02 <- apply( abs(XY[2:chNum,]), 2, which.max) + 1
-#PcalPhs02 <- Arg( mean(XY[((pcalCH[index]-1):(pcalCH[index]+1)),])} )
-#Tx02 <- TxCalSpec(
-#    DelayPhaseCal( BPphsCal(on_C00, BP$BP00), scanTime(onMJD), delay00Fit, Re00Fit, Im00Fit),
-#    DelayPhaseCal( BPphsCal(off_C00, BP$BP00), scanTime(offMJD), delay00Fit, Re00Fit, Im00Fit),
-#    off_A00, off_A02, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys00 * Tsys02), weight, mitigCH)
-#Tx13 <- TxCalSpec(
-#    DelayPhaseCal( BPphsCal(on_C01, BP$BP01), scanTime(onMJD), delay01Fit, Re01Fit, Im01Fit),
-#    DelayPhaseCal( BPphsCal(off_C01, BP$BP01), scanTime(offMJD), delay01Fit, Re01Fit, Im01Fit),
-#    off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys03), weight, mitigCH)
-if(0){
+DelCal <- function( spec, delay, phase ){
+    temp <- spec
+    for(index in 1:ncol(temp)){
+        temp[,index] <- delayPhase_cal( spec[,index], delay, phase )
+    }
+    return(temp)
+}
+Tx02 <- TxCalSpec( BPphsCal(DelCal(on_C00, WG$delay00, -Arg(WG$Vis00)), BP$BP00) , BPphsCal(DelCal(off_C00, WG$delay00, -Arg(WG$Vis00)), BP$BP00), off_A00, off_A02, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys00 * Tsys02), weight, mitigCH)
+Tx13 <- TxCalSpec( BPphsCal(DelCal(on_C01, WG$delay01, -Arg(WG$Vis01)), BP$BP01) , BPphsCal(DelCal(off_C01, WG$delay01, -Arg(WG$Vis01)), BP$BP01), off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys02), weight, mitigCH)
 StokesI02 <- 0.5*(Ta00 + Ta02)
 StokesI13 <- 0.5*(Ta01 + Ta03)
-StokesV02 <- Im(Tx02) - Im(Dxy02)* StokesI02
-StokesV13 <- Im(Tx13) - Im(Dxy13)* StokesI13
+StokesV02 <- Im(Tx02) # - Im(Dxy02)* StokesI02
+StokesV13 <- Im(Tx13) # - Im(Dxy13)* StokesI13
 RHCPspec <- (StokesI02 + StokesV02 + StokesI13 + StokesV13)/4
 LHCPspec <- (StokesI02 - StokesV02 + StokesI13 - StokesV13)/4
 #-------- Line Flux
@@ -155,10 +154,9 @@ for(scan_index in 1:pointingNum){
     text_sd <- sprintf('(%5.2f %5.2f)', coef(Rfit)['x0'] - coef(Lfit)['x0'], coef(Rfit)['y0'] - coef(Lfit)['y0']) 
     cat(text_sd); cat('\n')
 }
-save(SquintDF, file=sprintf('%s.Squint.Rdata', args$SAM45File))
-pdf(sprintf("%s.Squint.pdf", args$SAM45File))
-plot( bunch_vec(freq, 32), bunch_vec(RHCPspec[,posIndex[5]], 32), type='s', col='red', ylim=c(-1, max(max(RHCPspec[chRange,]))), xlab='Frequency [MHz]', ylab='Ta* [K]', main=args$SAM45File)
+save(SquintDF, file=sprintf('%s.Squint.Rdata', args$ScanFile))
+pdf(sprintf("%s.Squint.pdf", args$ScanFile))
+plot( bunch_vec(freq, 32), bunch_vec(RHCPspec[,posIndex[5]], 32), type='s', col='red', ylim=c(-1, max(max(RHCPspec[chRange,]))), xlab='Frequency [MHz]', ylab='Ta* [K]', main=args$ScanFile)
 lines(bunch_vec(freq, 32), bunch_vec(LHCPspec[,posIndex[5]], 32), type='s', col='blue')
 abline(v=args$lineFreq[1]); abline(v=args$lineFreq[2])
 dev.off()
-}
