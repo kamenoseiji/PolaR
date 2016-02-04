@@ -28,9 +28,9 @@ parseArg <- function( args ){
 }
 
 #-------- Procedures
-#args <- parseArg(commandArgs(trailingOnly = T))
+args <- parseArg(commandArgs(trailingOnly = T))
 #args <- parseArg(c('-S2015305092334.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.07', '-L2.35'))
-args <- parseArg(c('-S2015305092333.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.20', '-L2.21'))
+#args <- parseArg(c('-S2015305092333.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.20', '-L2.21'))
 #setwd('.')
 setwd('/Volumes/SSD/PolariS/20151101')
 load(args$WGFile)
@@ -84,9 +84,9 @@ Tsys03 <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$Tsys03[OnIndex], spar
 #-------- Parallactic angle
 AZ <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$AZ[OnIndex], spar=0.5), scanTime(onMJD))$y
 EL <- predict(smooth.spline(Scan$mjdSec[OnIndex], Scan$EL[OnIndex], spar=0.5), scanTime(onMJD))$y
-Pang <- -azel2pa(AZ, EL) + EL*pi/180 - pi/2
-cs <- cos(Pang)
-sn <- sin(Pang)
+# Pang <- -azel2pa(AZ, EL) + EL*pi/180 - pi/2
+# cs <- cos(Pang)
+# sn <- sin(Pang)
 #-------- Amplitude calibration of Autocorr
 Ta00 <- TaCalSpec(on_A00, off_A00, scanTime(onMJD), scanTime(offMJD), Tsys00, weight, mitigCH)
 Ta01 <- TaCalSpec(on_A01, off_A01, scanTime(onMJD), scanTime(offMJD), Tsys01, weight, mitigCH)
@@ -100,8 +100,8 @@ DelCal <- function( spec, delay, phase ){
     }
     return(temp)
 }
-Tx02 <- TxCalSpec( BPphsCal(DelCal(on_C00, WG$delay00, -Arg(WG$Vis00)), BP$BP00) , BPphsCal(DelCal(off_C00, WG$delay00, -Arg(WG$Vis00)), BP$BP00), off_A00, off_A02, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys00 * Tsys02), weight, mitigCH)
-Tx13 <- TxCalSpec( BPphsCal(DelCal(on_C01, WG$delay01, -Arg(WG$Vis01)), BP$BP01) , BPphsCal(DelCal(off_C01, WG$delay01, -Arg(WG$Vis01)), BP$BP01), off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys02), weight, mitigCH)
+Tx02 <- TxCalSpec( BPphsCal(DelCal(on_C00, WG$delay00, Arg(WG$Vis00)), BP$BP00) , BPphsCal(DelCal(off_C00, WG$delay00, Arg(WG$Vis00)), BP$BP00), off_A00, off_A02, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys00 * Tsys02), weight, mitigCH)
+Tx13 <- TxCalSpec( BPphsCal(DelCal(on_C01, WG$delay01, Arg(WG$Vis01)), BP$BP01) , BPphsCal(DelCal(off_C01, WG$delay01, Arg(WG$Vis01)), BP$BP01), off_A01, off_A03, scanTime(onMJD), scanTime(offMJD), sqrt(Tsys01 * Tsys02), weight, mitigCH)
 StokesI02 <- 0.5*(Ta00 + Ta02)
 StokesI13 <- 0.5*(Ta01 + Ta03)
 StokesV02 <- Im(Tx02) # - Im(Dxy02)* StokesI02
@@ -134,20 +134,20 @@ for(scan_index in 1:pointingNum){
     Lfit <- nls( formula = Z ~ a* exp( -0.5*( (x - x0)^2 + (y - y0)^2 )/ sigma^2), data = LDF, start=list(a=max(RDF$Z), x0=0.0, y0=0.0, sigma=max(posAz[posIndex])))
     if( scan_index == 1){
         SquintDF <- data.frame(
-            EL=cEl[scan_index],
+            EL=mean(cEl[posIndex]),
             Raz=coef(Rfit)['x0'], Rel=coef(Rfit)['y0'], Rpeak=coef(Rfit)['a'], RFWHM=2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'],
             Raze=sqrt(vcov(Rfit)['x0','x0']), Rele=sqrt(vcov(Rfit)['y0','y0']),
             Laz=coef(Lfit)['x0'], Lel=coef(Lfit)['y0'], Lpeak=coef(Lfit)['a'], LFWHM=2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'],
             Laze=sqrt(vcov(Lfit)['x0','x0']), Lele=sqrt(vcov(Lfit)['y0','y0']))
     } else {
         SquintDF <- rbind(SquintDF,  data.frame(
-            EL=cEl[scan_index],
+            EL=mean(cEl[posIndex]),
             Raz=coef(Rfit)['x0'], Rel=coef(Rfit)['y0'], Rpeak=coef(Rfit)['a'], RFWHM=2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'],
             Raze=sqrt(vcov(Rfit)['x0','x0']), Rele=sqrt(vcov(Rfit)['y0','y0']),
             Laz=coef(Lfit)['x0'], Lel=coef(Lfit)['y0'], Lpeak=coef(Lfit)['a'], LFWHM=2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'],
             Laze=sqrt(vcov(Lfit)['x0','x0']), Lele=sqrt(vcov(Lfit)['y0','y0'])))
     }
-    text_sd <- sprintf('%d %4.1f %4.1f %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', scan_index, cAz[scan_index], cEl[scan_index], coef(Rfit)['x0'], sqrt(vcov(Rfit)['x0','x0']), coef(Rfit)['y0'], sqrt(vcov(Rfit)['y0','y0']), coef(Rfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'])
+    text_sd <- sprintf('%d %4.1f %4.1f %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', scan_index, mean(cAz[posIndex]), mean(cEl[posIndex]), coef(Rfit)['x0'], sqrt(vcov(Rfit)['x0','x0']), coef(Rfit)['y0'], sqrt(vcov(Rfit)['y0','y0']), coef(Rfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'])
     cat(text_sd)
     text_sd <- sprintf('   %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', coef(Lfit)['x0'], sqrt(vcov(Lfit)['x0','x0']), coef(Lfit)['y0'], sqrt(vcov(Lfit)['y0','y0']), coef(Lfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'])
     cat(text_sd)
@@ -156,7 +156,7 @@ for(scan_index in 1:pointingNum){
 }
 save(SquintDF, file=sprintf('%s.Squint.Rdata', args$ScanFile))
 pdf(sprintf("%s.Squint.pdf", args$ScanFile))
-plot( bunch_vec(freq, 32), bunch_vec(RHCPspec[,posIndex[5]], 32), type='s', col='red', ylim=c(-1, max(max(RHCPspec[chRange,]))), xlab='Frequency [MHz]', ylab='Ta* [K]', main=args$ScanFile)
-lines(bunch_vec(freq, 32), bunch_vec(LHCPspec[,posIndex[5]], 32), type='s', col='blue')
+plot( freq, RHCPspec[,posIndex[5]], type='s', col='red', ylim=c(-1, max(max(RHCPspec[chRange,]))), xlab='Frequency [MHz]', ylab='Ta* [K]', main=args$ScanFile)
+lines( freq, LHCPspec[,posIndex[5]], type='s', col='blue')
 abline(v=args$lineFreq[1]); abline(v=args$lineFreq[2])
 dev.off()
