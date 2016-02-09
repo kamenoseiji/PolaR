@@ -1,11 +1,11 @@
 fileList <- commandArgs(trailingOnly = T)
 fileNum <- length(fileList)
-load('/Volumes/SSD/PolariS/20151101/2015305092333.Scan.Rdata.Squint.Rdata')
-DF <- SquintDF
-#for(file_index in 2:fileNum){
-#	load(fileList[file_index])
-#	DF <- rbind(DF, SquintDF)
-#}
+#load('/Volumes/SSD/PolariS/20151101/2015305092333.Scan.Rdata.Squint.Rdata')
+#DF <- SquintDF
+for(file_index in 2:fileNum){
+	load(fileList[file_index])
+	DF <- rbind(DF, SquintDF)
+}
 
 SquintDF <- data.frame(
     dAZ = cospi(DF$EL/180.0)*(DF$Raz - DF$Laz) - sinpi(DF$EL/180.0)*(DF$Rel - DF$Lel),
