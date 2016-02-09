@@ -29,10 +29,7 @@ parseArg <- function( args ){
 
 #-------- Procedures
 args <- parseArg(commandArgs(trailingOnly = T))
-#args <- parseArg(c('-S2015305092334.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.07', '-L2.35'))
-#args <- parseArg(c('-S2015305092333.Scan.Rdata', '-B2015305090355.BP.Rdata', '-W2015305090355.WG.Rdata', '-l2.20', '-L2.21'))
-#setwd('.')
-setwd('/Volumes/SSD/PolariS/20151101')
+setwd('.')
 load(args$WGFile)
 load(args$BPFile)
 load(args$ScanFile)
