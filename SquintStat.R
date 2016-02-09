@@ -1,7 +1,8 @@
 fileList <- commandArgs(trailingOnly = T)
 fileNum <- length(fileList)
 #load('/Volumes/SSD/PolariS/20151101/2015305092333.Scan.Rdata.Squint.Rdata')
-#DF <- SquintDF
+load(fileList[1])
+DF <- SquintDF
 for(file_index in 2:fileNum){
 	load(fileList[file_index])
 	DF <- rbind(DF, SquintDF)
