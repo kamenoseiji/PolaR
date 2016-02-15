@@ -113,7 +113,7 @@ gst2ha <- function(gst, lambda=131.556644*pi/180, ra=pi){
 }
 
 #-------- Hour angle to Az, El
-ha2azel <-function(ha, phi=34.217019*pi/180, dec=0){
+ha2azel <-function(ha, phi=35.94152778*pi/180, dec=0){
 	# ha2azel : Calculate Azimuth, Elevation, and Parallactic Angle
 	# ha  : Hour Angle
 	# phi : Latitude of the site [rad]
@@ -122,7 +122,7 @@ ha2azel <-function(ha, phi=34.217019*pi/180, dec=0){
 	sin_el <- sin(phi)* sin(dec) + cos(phi)* cos(dec)* cos(ha)
 	el <- asin(sin_el)
 	az <- atan2(cos(dec)*sin(ha), sin(phi)*cos(dec)*cos(ha) - cos(phi)*sin(dec)) + pi
-	pa <- atan2(cos(phi)*sin(ha), sin(phi)*cos(dec) - cos(phi)*sin(dec)* cos(ha))
+	pa <- atan2(sin(ha), tan(phi)*cos(dec) - sin(dec)* cos(ha))
 	return(data.frame(ha=ha, az=az, el=el, pa=pa))
 }
 
