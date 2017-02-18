@@ -9,8 +9,8 @@ for(file_index in 2:fileNum){
 }
 
 SquintDF <- data.frame(
-    dAZ = cospi(DF$EL/180.0)*(DF$Raz - DF$Laz) - sinpi(DF$EL/180.0)*(DF$Rel - DF$Lel),
-    dEL = sinpi(DF$EL/180.0)*(DF$Raz - DF$Laz) + cospi(DF$EL/180.0)*(DF$Rel - DF$Lel),
+    dAZ = -(cospi(DF$EL/180.0)*(DF$Raz - DF$Laz) - sinpi(DF$EL/180.0)*(DF$Rel - DF$Lel)),
+    dEL = -(sinpi(DF$EL/180.0)*(DF$Raz - DF$Laz) + cospi(DF$EL/180.0)*(DF$Rel - DF$Lel)),
     eAZ = sqrt( DF$Raze^2 + DF$Laze^2),
     eEL = sqrt( DF$Rele^2 + DF$Lele^2))
 Waz <- 1.0/SquintDF$eAZ^2
@@ -28,5 +28,5 @@ abline(v=0, lwd=0.25); abline(h=0, lwd=0.25)
 arrows( SquintDF$dAZ, SquintDF$dEL - SquintDF$eEL, SquintDF$dAZ, SquintDF$dEL + SquintDF$eEL, length=0, col=gray(1.0 - Waz/max(Waz)))
 arrows( SquintDF$dAZ - SquintDF$eAZ, SquintDF$dEL, SquintDF$dAZ + SquintDF$eAZ, SquintDF$dE, length=0, col=gray(1.0 - Waz/max(Waz)))
 points(SquintDF$dAZ, SquintDF$dEL, pch=20, cex=Waz/max(Waz))
-text( Xlim[1] - 1, Ylim[2] - 1, pos=4, text_sd)
+text( Xlim[1] + 1, Ylim[2] - 1, pos=4, text_sd)
 dev.off()

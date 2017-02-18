@@ -5,6 +5,19 @@ bunch_vec <- function(vector, bunchNum){	# Function to bunch 1-d vector
 	return( apply(temp, 2, mean))
 }
 
+#-------- Median Window Filter (mwf)
+medianWindowFilter <- function(vector, width){
+    if(width %% 2 == 0){ width <- width + 1 }
+    halfWidth <- (width + 1)/2
+    vecLen <- length(vector)
+    beginWindow <- c( rep(1, halfWidth), seq(2, vecLen - width + 1), rep(vecLen - width + 1, halfWidth - 1))
+    endWindow   <- beginWindow + width - 1
+    mwf <- numeric(vecLen)
+    for(index in 1:vecLen){
+        mwf[index] <- median(vector[beginWindow[index]:endWindow[index]])
+    }
+    return(mwf)
+}
 #-------------------------------------- Function to calculate cross spectrum from correlation function
 corr2spec <- function( corr ){
 	nspec <- length(corr)/2
@@ -52,6 +65,10 @@ delayPhase_cal <- function( spec, delay, phase ){
 
 #-------------------------------------- Complex Bandpass Table
 BPtable <- function( spec, smoothCH ){
+    mwfBP <- medianWindowFilter(Re(spec), smoothCH) + (0+1i)* medianWindowFilter(Im(spec), smoothCH)
+    diffSpec <- Mod(spec - mwfBP)
+    thresh <- 5.0* median(diffSpec)
+    mask <- which(diffSpec < thresh)
 	delay <- delay_search(spec)
 	delCaledSpec <- delay_cal(spec, delay)
 	return(smoothComplex(delCaledSpec, smoothCH))

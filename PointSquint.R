@@ -36,6 +36,15 @@ load(args$DtermFile)
 load(args$WGFile)
 load(args$BPFile)
 #-------- Smoothed Delay and Phase
+numWGentry <- length(WG$mjdSec)
+if(numWGentry < 4){
+    WG <- data.frame(
+        mjdSec  = c( min(WG$mjdSec)-7200, min(WG$mjdSec)-3600, WG$mjdSec, max(WG$mjdSec)+3600, max(WG$mjdSec)+7200),
+        delay00 = c( WG$delay00[1], WG$delay00[1], WG$delay00, WG$delay00[numWGentry], WG$delay00[numWGentry]),
+        delay01 = c( WG$delay01[1], WG$delay01[1], WG$delay01, WG$delay01[numWGentry], WG$delay01[numWGentry]),
+        Vis00 = c( WG$Vis00[1], WG$Vis00[1], WG$Vis00, WG$Vis00[numWGentry], WG$Vis00[numWGentry]),
+        Vis01 = c( WG$Vis01[1], WG$Vis01[1], WG$Vis01, WG$Vis01[numWGentry], WG$Vis01[numWGentry]))
+}
 delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25)
 delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.25)
 Re00Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis00), spar=0.25)

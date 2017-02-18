@@ -3,7 +3,7 @@
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
 RPATH <- '~/Programs/PolaR'
-FuncList <- c('readSAM45', 'readPolariS', 'Qeff')
+FuncList <- c('readSAM45', 'readPolariS', 'Qeff', 'PolariCalib')
 source(sprintf('%s/loadModule.R', RPATH))
 library(RCurl)
 
@@ -30,11 +30,11 @@ for(index in 1:length(P00fileList)){
 }
 
 LevelNum <- 256
-ThreshNum <- LevelNum - 1
+ThreshNum <- LevelNum/16 - 1
 Thresh <- matrix( nrow=ThreshNum, ncol=length(IF_ID))
 for(if_index in 1:length(IF_ID)){
     readFile <- sprintf("%s.P.%02d", prefix, IF_ID[if_index])
-	levelHisto <- matrix(readBitDist(readFile), nrow=LevelNum)
+	levelHisto <- apply(matrix(readBitDist(readFile), nrow=LevelNum), 2, bunchVec16)
 	avail_index <- which( levelHisto[1,] > 0.9* max(levelHisto[1,]))
 	threshHolds <- apply(levelHisto[,avail_index], 2, threshLevel)
 	avail_index <- which((colSums(is.infinite(threshHolds)) + colSums(is.na(threshHolds))) == 0)
