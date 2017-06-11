@@ -40,7 +40,7 @@ makeBP <- function(scanXP, prefix){
 	startPoint <- scanXP$startMJD[BPscanIndex] - prefix2MJDsec(prefix[file_index]) + 1
 	C00 <- apply(readPolariS_X(sprintf('%s.C.%02d', prefix[file_index], 0))[,startPoint:endPoint], 1, mean)
 	C01 <- apply(readPolariS_X(sprintf('%s.C.%02d', prefix[file_index], 1))[,startPoint:endPoint], 1, mean)
-	BP <- data.frame( BP00 = BPtable(C00, length(C00)/6), BP01 =  BPtable(C01, length(C01)/6) )
+	BP <- data.frame( BP00 = BPtable(C00, floor(length(C00)/6)), BP01 =  BPtable(C01, floor(length(C01)/6)) )
 	return(BP)
 }
 

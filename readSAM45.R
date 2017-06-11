@@ -233,8 +233,8 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 	for(IF_index in 1:length(IF_ID)){
 		tempPower <- numeric(0)
 		for(index in 1:PolarisFileNum){
-			#tempPower <- append( tempPower, bitThresh(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index]), Thresh[,IF_index]))
-			tempPower <- append( tempPower, Apower(sprintf("%s.A.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
+			tempPower <- append( tempPower, bitThresh(sprintf("%s.P.%02d", prefix[prefix_index[index]], IF_ID[IF_index]), Thresh[,IF_index]))
+			#tempPower <- append( tempPower, Apower(sprintf("%s.A.%02d", prefix[prefix_index[index]], IF_ID[IF_index])))
 		}
 		powerIF[[IF_index]] <- tempPower
 	}
@@ -268,6 +268,12 @@ bitPower <- function(fname){
 #-------- Function to estimate power using 256-level histogram
 bitThresh <- function(fname, thresh){
 	bitDist <- readBitDist(fname)
+    nLevel <- length(thresh) + 1
+    bunchLevel <- dim(bitDist)[1] / nLevel
+    if(bunchLevel > 1){
+        bunchVecNlevel <- function(vec){ return(bunch_vec(vec, bunchLevel)) }
+        bitDist <- apply(bitDist, 2, bunchVecNlevel)
+    }
 	gThresh <- function(nsample){ return(gaussThresh(nsample, thresh)) }
 	gaussResults <- apply(bitDist, 2, gThresh)
 	return(1/gaussResults[1,]^2)
