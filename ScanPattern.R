@@ -3,7 +3,7 @@
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
 RPATH <- '~/Programs/PolaR'
-FuncList <- c('readSAM45', 'readPolariS', 'Qeff', 'date', 'plotTool')
+FuncList <- c('readSAM45', 'readPolariS', 'PolariCalib', 'Qeff', 'date', 'plotTool')
 source(sprintf('%s/loadModule.R', RPATH))
 library(RCurl)
 
