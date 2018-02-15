@@ -105,47 +105,12 @@ for(scan_index in 1:length(onMJD$stopMjd)){
 }
 
 beamDF <- data.frame(mjdSrc=scanTime(onMJD), posAz=posAz, posEl=posEl, cAz=cAz, cEl=cEl, RHCPflux=RHCPflux, LHCPflux=LHCPflux)
-save(beamDF, file='beamDF.Rdata')
-
-if(0){
-pointingNum <- floor((length(offMJD$stopMjd) - 1) / 2)
-cat('#  AZ   EL  |R dAZ   err     dEL   err    Peak  FWHM   |L  dAZ   err     dEL   err    Peak  FWHM  Squint(Az,El) \n')
-for(scan_index in 1:pointingNum){
-    posIndex <- (6*scan_index - 5):(6*scan_index)
-    posOff <- Scan$dAZ[Scan$mjdSec == floor(scanTime(offMJD)[scan_index])]
-    RDF <- data.frame(
-        x = c(posAz[posIndex], -posOff, posOff, 0, 0),
-        y = c(posEl[posIndex], 0, 0, -posOff, posOff),
-        Z = c(RHCPflux[posIndex], 0, 0, 0, 0))
-    LDF <- RDF; LDF$Z <- c(LHCPflux[posIndex], 0, 0, 0, 0)
-    Rfit <- nls( formula = Z ~ a* exp( -0.5*( (x - x0)^2 + (y - y0)^2 )/ sigma^2), data = RDF, start=list(a=max(RDF$Z), x0=0.0, y0=0.0, sigma=max(posAz[posIndex])))
-    Lfit <- nls( formula = Z ~ a* exp( -0.5*( (x - x0)^2 + (y - y0)^2 )/ sigma^2), data = LDF, start=list(a=max(RDF$Z), x0=0.0, y0=0.0, sigma=max(posAz[posIndex])))
-    if( scan_index == 1){
-        SquintDF <- data.frame(
-            EL=cEl[scan_index],
-            Raz=coef(Rfit)['x0'], Rel=coef(Rfit)['y0'], Rpeak=coef(Rfit)['a'], RFWHM=2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'],
-            Raze=sqrt(vcov(Rfit)['x0','x0']), Rele=sqrt(vcov(Rfit)['y0','y0']),
-            Laz=coef(Lfit)['x0'], Lel=coef(Lfit)['y0'], Lpeak=coef(Lfit)['a'], LFWHM=2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'],
-            Laze=sqrt(vcov(Lfit)['x0','x0']), Lele=sqrt(vcov(Lfit)['y0','y0']))
-    } else {
-        SquintDF <- rbind(SquintDF,  data.frame(
-            EL=cEl[scan_index],
-            Raz=coef(Rfit)['x0'], Rel=coef(Rfit)['y0'], Rpeak=coef(Rfit)['a'], RFWHM=2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'],
-            Raze=sqrt(vcov(Rfit)['x0','x0']), Rele=sqrt(vcov(Rfit)['y0','y0']),
-            Laz=coef(Lfit)['x0'], Lel=coef(Lfit)['y0'], Lpeak=coef(Lfit)['a'], LFWHM=2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'],
-            Laze=sqrt(vcov(Lfit)['x0','x0']), Lele=sqrt(vcov(Lfit)['y0','y0'])))
-    }
-    text_sd <- sprintf('%d %4.1f %4.1f %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', scan_index, cAz[scan_index], cEl[scan_index], coef(Rfit)['x0'], sqrt(vcov(Rfit)['x0','x0']), coef(Rfit)['y0'], sqrt(vcov(Rfit)['y0','y0']), coef(Rfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Rfit)['sigma'])
-    cat(text_sd)
-    text_sd <- sprintf('   %5.2f (%4.2f)  %5.2f (%4.2f) %5.1f %4.2f ', coef(Lfit)['x0'], sqrt(vcov(Lfit)['x0','x0']), coef(Lfit)['y0'], sqrt(vcov(Lfit)['y0','y0']), coef(Lfit)['a'], 2.0*sqrt(2.0* log(2.0))* coef(Lfit)['sigma'])
-    cat(text_sd)
-    text_sd <- sprintf('(%5.2f %5.2f)', coef(Rfit)['x0'] - coef(Lfit)['x0'], coef(Rfit)['y0'] - coef(Lfit)['y0']) 
-    cat(text_sd); cat('\n')
-}
-save(SquintDF, file=sprintf('%s.Squint.Rdata', args$SAM45File))
-pdf(sprintf("%s.Squint.pdf", args$SAM45File))
-plot( bunch_vec(freq, 32), bunch_vec(RHCPspec[,posIndex[5]], 32), type='s', col='red', ylim=c(-1, max(max(RHCPspec[chRange,]))), xlab='Frequency [MHz]', ylab='Ta* [K]', main=args$SAM45File)
-lines(bunch_vec(freq, 32), bunch_vec(LHCPspec[,posIndex[5]], 32), type='s', col='blue')
-abline(v=args$lineFreq[1]); abline(v=args$lineFreq[2])
-dev.off()
-}
+save(beamDF, file=sprintf('%s.beamDF.Rdata', substr(args$ScanFile, 1, 13)))
+#-------- Beam squint fitting
+fit <- nls(data=beamDF, formula=(RHCPflux + LHCPflux) ~ a* exp(-0.5*( ( posAz - b)^2 + (posEl -c)^2 )/d), weights=(RHCPflux + LHCPflux)^2, start=list(a=max(beamDF$RHCP+beamDF$LHCP), b=0, c=0, d=400))
+beamVar <- summary(fit)$coefficients['d','Estimate']
+fit <- lm(data=beamDF, formula=(RHCPflux - LHCPflux)/(RHCPflux + LHCPflux) ~ posAz + posEl, weights=(RHCPflux + LHCPflux)^2)
+beamSquint <- as.numeric(summary(fit)$coefficients[c('posAz', 'posEl'),'Estimate'])* beamVar
+beamSquintErr <- as.numeric(summary(fit)$coefficients[c('posAz', 'posEl'),'Std. Error'])* beamVar
+cat('  AZ     EL      PA   FWHM   Squint(Az) err  Sqruint(El) err  \n')
+cat(sprintf('%6.1f  %5.1f  %6.1f  %5.1f     %5.2f  %5.2f     %5.2f  %5.2f \n', median(beamDF$cAz), median(beamDF$cEl), azel2pa(median(beamDF$cAz)/180*pi, median(beamDF$cEl)/180*pi)*180/pi, 2.0* sqrt(beamVar/2.0 / log(2)), beamSquint[1], beamSquintErr[1], beamSquint[2], beamSquintErr[2]))
