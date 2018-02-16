@@ -24,38 +24,38 @@ for(index in mapIndex){
 }
 pdf(sprintf('%s.pdf', fileName))
 #--------  Peak Intensity Map
-image(-ax1+mapCenter[1], ax2-mapCenter[2], PeakMap, xlab = xlab, ylab = ylab, main=fileName, col = topo.colors(32)); points(0,0, pch=3)
+image(-ax1+mapCenter[1], ax2-mapCenter[2], PeakMap, xlab = xlab, ylab = ylab, main=paste(fileName, 'Peak Intensity Map', sep=' '), col = topo.colors(32)); points(0,0, pch=3)
 
 #--------  Moment-0 (integrated intensity) Map
-image(-ax1+mapCenter[1], ax2-mapCenter[2], MOM0, xlab = xlab, ylab = ylab, main=fileName, col = topo.colors(32)); points(0,0, pch=3)
+image(-ax1+mapCenter[1], ax2-mapCenter[2], MOM0, xlab = xlab, ylab = ylab, main=paste(fileName, 'Integrated Intensity Map', sep=' '), col = topo.colors(32)); points(0,0, pch=3)
 
 #-------- Velocity Gradient for Vupper
-image(-ax1+mapCenter[1], ax2-mapCenter[2] ,Vupper, xlab = xlab, ylab = ylab, main=fileName, col = cm.colors(32)); points(0,0, pch=3)
+image(-ax1+mapCenter[1], ax2-mapCenter[2] ,Vupper, xlab = xlab, ylab = ylab, main=paste(fileName, 'Upper Velocity Edge', sep=' '), col = cm.colors(32)); points(0,0, pch=3)
 DF <- data.frame( x=ax1[(mapIndex - 1) %% nrow(Vupper) + 1] - mapCenter[1], y=ax2[ceiling( mapIndex / nrow(Vupper) )] - mapCenter[2], z=Vupper[mapIndex], w=PeakMap[mapIndex])
 DF$w <- DF$w / (DF$x^2 + DF$y^2)
 DF[(DF$x^2 + DF$y^2) > velGradRadius^2,]$w <- 0
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Verocity Gradient = (%5.2f %5.2f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'])
+text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 text(-0.1, 0.15, pos=4, text_sd) 
 cat(text_sd); cat('\n')
 
 #-------- Velocity Gradient for Vlower
-image(-ax1+mapCenter[1], ax2-mapCenter[2] ,Vlower, xlab = xlab, ylab = ylab, main=fileName, col = cm.colors(32)); points(0,0, pch=3)
+image(-ax1+mapCenter[1], ax2-mapCenter[2] ,Vlower, xlab = xlab, ylab = ylab, main=paste(fileName, 'Lower Velocity Edge', sep=' '), col = cm.colors(32)); points(0,0, pch=3)
 DF <- data.frame( x=ax1[(mapIndex - 1) %% nrow(Vlower) + 1] - mapCenter[1], y=ax2[ceiling( mapIndex / nrow(Vlower) )] - mapCenter[2], z=Vlower[mapIndex], w=PeakMap[mapIndex])
 DF$w <- DF$w / (DF$x^2 + DF$y^2)
 DF[(DF$x^2 + DF$y^2) > velGradRadius^2,]$w <- 0
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Verocity Gradient = (%5.2f %5.2f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'])
+text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 text(-0.1, 0.15, pos=4, text_sd) 
 cat(text_sd); cat('\n')
 
 #-------- Velocity Gradient for mean(Vupper, Vlower)
-image(-ax1+mapCenter[1], ax2-mapCenter[2] ,0.5*(Vupper + Vlower), xlab = xlab, ylab = ylab, main=fileName, col = cm.colors(32)); points(0,0, pch=3)
+image(-ax1+mapCenter[1], ax2-mapCenter[2] ,0.5*(Vupper + Vlower), xlab = xlab, ylab = ylab, main=paste(fileName, 'Both Velocity Edge', sep=' '), col = cm.colors(32)); points(0,0, pch=3)
 DF <- data.frame( x=ax1[(mapIndex - 1) %% nrow(Vlower) + 1] - mapCenter[1], y=ax2[ceiling( mapIndex / nrow(Vlower) )] - mapCenter[2], z=0.5*(Vupper[mapIndex]+Vlower[mapIndex]), w=PeakMap[mapIndex])
 DF$w <- DF$w / (DF$x^2 + DF$y^2)
 DF[(DF$x^2 + DF$y^2) > velGradRadius^2,]$w <- 0
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Verocity Gradient = (%5.2f %5.2f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'])
+text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 text(-0.1, 0.15, pos=4, text_sd) 
 cat(text_sd); cat('\n')
 dev.off()
