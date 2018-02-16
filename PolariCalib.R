@@ -74,7 +74,7 @@ BPtable <- function( spec, smoothCH ){
     weight <- rep(0.0, length(spec)); weight[mask] <- 1.0
 	delay <- delay_search(spec, weight)
 	delCaledSpec <- delay_cal(spec, delay)
-	return(smoothComplex(delCaledSpec, smoothCH))
+	return(smoothComplex(delCaledSpec/mean(delCaledSpec[mask]), smoothCH))
 }
 
 #-------------------------------------- Smoothing complex vector
