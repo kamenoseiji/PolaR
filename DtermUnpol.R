@@ -79,3 +79,4 @@ D
 fileName <- sprintf("%s.Dterm.Rdata", strsplit(args[2], "\\.")[[1]][1])
 save(D, file=fileName)
 cat(sprintf('D-term is saved into %s\n', fileName))
+dev.off()
