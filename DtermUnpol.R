@@ -51,8 +51,8 @@ OnIndex <- which(Scan$scanType == 'ON')
 OfIndex <- which(Scan$scanType == 'OFF')
 
 #-------- Amplitude calibration of Autocorr
-fileName <- sprintf("%s.ContPower.pdf", strsplit(args[2], "\\.")[[1]][1])
-pdf(fileName)
+#fileName <- sprintf("%s.ContPower.pdf", strsplit(args[2], "\\.")[[1]][1])
+#pdf(fileName)
 Ta00 <- TaCal( colSums(on_A00[chRange,]),  colSums(off_A00[chRange,]), Scan$Tsys00[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]) #; cat(Scan$Tsys00[OfIndex]); cat('\n') # ; cat(Ta00); cat('\n')
 Ta01 <- TaCal( colSums(on_A01[chRange,]),  colSums(off_A01[chRange,]), Scan$Tsys01[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]) #; cat(Scan$Tsys01[OfIndex]); cat('\n') # ; cat(Ta01); cat('\n')
 Ta02 <- TaCal( colSums(on_A02[chRange,]),  colSums(off_A02[chRange,]), Scan$Tsys02[OfIndex], scanTime(onMJD), scanTime(offMJD), Scan$mjdSec[OfIndex]) #; cat(Scan$Tsys02[OfIndex]); cat('\n') # ; cat(Ta02); cat('\n')
@@ -79,4 +79,4 @@ D
 fileName <- sprintf("%s.Dterm.Rdata", strsplit(args[2], "\\.")[[1]][1])
 save(D, file=fileName)
 cat(sprintf('D-term is saved into %s\n', fileName))
-dev.off()
+#dev.off()
