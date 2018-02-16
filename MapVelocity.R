@@ -35,7 +35,7 @@ DF <- data.frame( x=ax1[(mapIndex - 1) %% nrow(Vupper) + 1] - mapCenter[1], y=ax
 DF$w <- DF$w / (DF$x^2 + DF$y^2)
 DF[(DF$x^2 + DF$y^2) > velGradRadius^2,]$w <- 0
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
+text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x'], coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 text(-0.1, 0.15, pos=4, text_sd) 
 cat(text_sd); cat('\n')
 
@@ -45,7 +45,7 @@ DF <- data.frame( x=ax1[(mapIndex - 1) %% nrow(Vlower) + 1] - mapCenter[1], y=ax
 DF$w <- DF$w / (DF$x^2 + DF$y^2)
 DF[(DF$x^2 + DF$y^2) > velGradRadius^2,]$w <- 0
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
+text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x'], coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 text(-0.1, 0.15, pos=4, text_sd) 
 cat(text_sd); cat('\n')
 
@@ -55,7 +55,7 @@ DF <- data.frame( x=ax1[(mapIndex - 1) %% nrow(Vlower) + 1] - mapCenter[1], y=ax
 DF$w <- DF$w / (DF$x^2 + DF$y^2)
 DF[(DF$x^2 + DF$y^2) > velGradRadius^2,]$w <- 0
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x']/ cospi(mapCenter[2]/180), coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
+text_sd <- sprintf('Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x'], coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 text(-0.1, 0.15, pos=4, text_sd) 
 cat(text_sd); cat('\n')
 dev.off()
