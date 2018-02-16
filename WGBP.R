@@ -27,7 +27,7 @@ scanGap <- function( XP, threshL, threshH, gapThresh ){
 	scanNum <- length(scanStart); XPamp <- numeric(0)
 	for(scan_index in 1:scanNum){
 		scanRange <- scanStart[scan_index]:scanEnd[scan_index]
-		XPamp[scan_index] <- Mod( median(XP$C00[scanRange]) + median(XP$C00[scanRange]) )
+		XPamp[scan_index] <- Mod( median(XP$C00[scanRange]) )
 	}
 	return(data.frame( startMJD=XP$mjdSec[scanStart], endMJD=XP$mjdSec[scanEnd], XPamp = XPamp))
 }

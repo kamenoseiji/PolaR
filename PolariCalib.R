@@ -36,8 +36,10 @@ spec2corr <- function(spec){
 }
 
 #-------------------------------------- Delay Search
-delay_search <- function( spec ){
+delay_search <- function( spec, weight=0 ){
 	nspec <- length( spec )
+    if(length(weight) < length(spec)){    weight <- rep(1.0, nspec)}
+    spec <- spec * weight
 	#-------- Search for delay
 	delay <- which.max(Mod(spec2corr(spec))) - nspec - 1	# Coarse Delay
 	trial_delay <- delay + seq(-1, 1, by=0.1); trial_amp <- numeric(0)
@@ -69,7 +71,8 @@ BPtable <- function( spec, smoothCH ){
     diffSpec <- Mod(spec - mwfBP)
     thresh <- 5.0* median(diffSpec)
     mask <- which(diffSpec < thresh)
-	delay <- delay_search(spec)
+    weight <- rep(0.0, length(spec)); weight[mask] <- 1.0
+	delay <- delay_search(spec, weight)
 	delCaledSpec <- delay_cal(spec, delay)
 	return(smoothComplex(delCaledSpec, smoothCH))
 }
