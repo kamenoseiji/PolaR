@@ -146,7 +146,7 @@ fitStokesI13 <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=kno
 for(scan_index in 1:length(Tsys00)){
     beamRot <- -pi* EL[scan_index]/180.0 + azel2pa(AZ[scan_index], EL[scan_index])
     csB <- cos(beamRot); snB <- sin(beamRot)
-    Fshift <- -VelocGradRADEC[1]* (csB* BeamSquintAzEl[1] - snB* BeamSquintAzEl[1]) + VelocGradRADEC[2]* (snB* BeamSquintAzEl[1] + csB* BeamSquintAzEl[1])
+    Fshift <- -VelocGradRADEC[1]* (csB* BeamSquintAzEl[1] - snB* BeamSquintAzEl[2]) + VelocGradRADEC[2]* (snB* BeamSquintAzEl[1] + csB* BeamSquintAzEl[2])
     cat(sprintf("Scan%d PA=%5.1f BeamRot = %5.1f Fshift=%5.1f Hz\n", scan_index, Pang[scan_index], beamRot, Fshift))
     Fshift <- Fshift * 0.5e-6
     fakeStokesV02 <- predict(fitStokesI02, (freq + Fshift))$y - predict(fitStokesI02, (freq - Fshift))$y
