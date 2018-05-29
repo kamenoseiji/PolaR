@@ -1,5 +1,11 @@
 # StokeSpec
 # usage: Rscript StokesSpec [Scan.Rdata file name] [SPEC.Rdata file name] [WG.Rdata file name] [BP file name]
+# Options:
+#  -b and -B : Beam squint in AZ and EL (at feed horn), i.e. dAZ1 and dEL1 
+#  -o and -O : Beam offset in AZ and EL (at dish), i.e. dAZ0 and dEL0
+#              Thus, the beam separation between RHCP and LHCP on the sky will be given as 
+#                 dAZ = dAZ0 + dAZ1* cos EL + dEL1* sin(EL)
+#                 dEL = dEL0 - dAZ1* sin EL + dEL1* cos(EL)
 #
 RPATH <- '~/Programs/PolaR'
 FuncList <- c('readPolariS', 'readSAM45', 'date', 'Qeff', 'PolariCalib')
@@ -25,13 +31,15 @@ parseArg <- function( args ){
         if(substr(args[index], 1,2) == "-D"){ DtermFile <- substring(args[index], 3);  fileNum <- fileNum - 1}
         if(substr(args[index], 1,2) == "-b"){ SqX <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam Squint (RHCP-LHCP) in AZ [arcsec]
         if(substr(args[index], 1,2) == "-B"){ SqY <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam Squint (RHCP-LHCP) in EL [arcsec]
+        if(substr(args[index], 1,2) == "-o"){ OfX <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam offset (RHCP-LHCP) in AZ [arcsec]
+        if(substr(args[index], 1,2) == "-O"){ OfY <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}        # Beam offset (RHCP-LHCP) in EL [arcsec]
         if(substr(args[index], 1,2) == "-v"){ VgRA  <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in RA [Hz/arcsec]
         if(substr(args[index], 1,2) == "-V"){ VgDEC <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}      # Velocity Gradient in DEC [Hz/arcsec]
         if(substr(args[index], 1,2) == "-p"){ minPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
         if(substr(args[index], 1,2) == "-P"){ maxPA <- as.numeric(substring(args[index], 3));  fileNum <- fileNum - 1}
     }
     fileName <- args[(argNum - fileNum + 1):argNum]
-    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
+    return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, OfX = OfX, OfY = OfY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
 }
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
@@ -95,7 +103,7 @@ cs <- cos(Pang)
 sn <- sin(Pang)
 PAindex <- which( (azel2pa(AZ, EL) > args$minPA) & (azel2pa(AZ, EL) < args$maxPA) )
 #-------- Beam Squint and Velocity Gradient
-BeamSquintAzEl <- c(args$SqX,  args$SqY)    # arcsec
+#BeamSquintAzEl <- c(args$SqX,  args$SqY)    # arcsec
 VelocGradRADEC <- c(args$VgRA, args$VgDEC)  # Hz / arcsec
 #BeamSquintAzEl <- c(-1.67, 1.18)    # arcsec
 #VelocGradRADEC <- c(152, 115)       # Hz / arcsec
@@ -144,13 +152,14 @@ weight <- rep(0.0, length(freq)); weight[chRange] <- 1.0
 fitStokesI02 <- smooth.spline(freq, StokesI02, w=weight, all.knots=F, nknots=knotNum)
 fitStokesI13 <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=knotNum)
 for(scan_index in 1:length(Tsys00)){
-    beamRot <- -pi* EL[scan_index]/180.0 + azel2pa(AZ[scan_index], EL[scan_index])
-    csB <- cos(beamRot); snB <- sin(beamRot)
-    Fshift <- -VelocGradRADEC[1]* (csB* BeamSquintAzEl[1] - snB* BeamSquintAzEl[2]) + VelocGradRADEC[2]* (snB* BeamSquintAzEl[1] + csB* BeamSquintAzEl[2])
-    cat(sprintf("Scan%d PA=%5.1f BeamRot = %5.1f Fshift=%5.1f Hz\n", scan_index, Pang[scan_index], beamRot, Fshift))
-    Fshift <- Fshift * 0.5e-6
-    fakeStokesV02 <- predict(fitStokesI02, (freq + Fshift))$y - predict(fitStokesI02, (freq - Fshift))$y
-    fakeStokesV13 <- predict(fitStokesI13, (freq + Fshift))$y - predict(fitStokesI13, (freq - Fshift))$y
+	csE <- cospi(EL[scan_index]/180.0); snE <- sinpi(EL[scan_index]/180.0)                                          # cos(EL) and sin(EL)
+	BeamSquintAzEl <- c(args$OfX + args$SqX * csE + args$SqY * snE,  args$OfY - args$SqX * snE + args$SqY * csE)    # Beam squint on the sky (az, el)
+    PA <- azel2pa(AZ[scan_index], EL[scan_index]); csB <- cos(PA); snB <- sin(PA)                                   # Rotation of beam squint on the sky (RA, DEC)
+    Fshift <- -VelocGradRADEC[1]* (csB* BeamSquintAzEl[1] + snB* BeamSquintAzEl[2]) - VelocGradRADEC[2]* (-snB* BeamSquintAzEl[1] + csB* BeamSquintAzEl[2]) # Vgrad dot Squint
+    cat(sprintf("Scan%d AZ=%5.1f EL=%5.1f PA=%5.1f Fshift=%5.1f Hz\n", scan_index, AZ[scan_index], EL[scan_index], PA, Fshift))
+    Fshift <- Fshift * 0.5e-6                                                                                       # Frequency Shift in MHz
+    fakeStokesV02 <- predict(fitStokesI02, (freq + Fshift))$y - predict(fitStokesI02, (freq - Fshift))$y            # Velocity gradient correction
+    fakeStokesV13 <- predict(fitStokesI13, (freq + Fshift))$y - predict(fitStokesI13, (freq - Fshift))$y            # Velocity gradient correction
     Tx02[chRange,scan_index] = Tx02[chRange,scan_index] + 0.5i * fakeStokesV02[chRange]
     Tx13[chRange,scan_index] = Tx13[chRange,scan_index] + 0.5i * fakeStokesV13[chRange]
 }
