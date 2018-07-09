@@ -43,7 +43,7 @@ parseArg <- function( args ){
 }
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
-#args <- list(smoothWidth = 64, SqX = -2.06, SqY = 0.0, VgRA = 152, VgDEC = 115, DtermFile = '2015075100322.Dterm.Rdata', fileName = c('2015075034443.Scan.Rdata', '2015075034519.SPEC.Rdata', '2015075031846.WG.Rdata', '2015075031846.BP.Rdata'))
+#args <- parseArg(c('-S64','-b-2.04','-B-0.39','-o-0.41','-O-1.25','-v152','-V115','-p-180','-P180','-D2015107023131.Dterm.Rdata','2015107025048.Scan.Rdata','2015107025124.SPEC.Rdata','2015107021006.WG.Rdata','2015107021006.BP.Rdata'))
 setwd('.')
 cat('Loading spectral data...\n')
 load(args$fileName[1])	 #Load Scan file
@@ -109,10 +109,10 @@ VelocGradRADEC <- c(args$VgRA, args$VgDEC)  # Hz / arcsec
 #VelocGradRADEC <- c(152, 115)       # Hz / arcsec
 #-------- Amplitude calibration of Autocorr
 cat('--- Amplitude and Phase Calibration\n')
-Ta00 <- TaCalSpec(on_A00, off_A00, scanTime(onMJD), scanTime(offMJD), Tsys00, weight, mitigCH) / sqrt(Rxy02)
-Ta01 <- TaCalSpec(on_A01, off_A01, scanTime(onMJD), scanTime(offMJD), Tsys01, weight, mitigCH) / sqrt(Rxy13)
-Ta02 <- TaCalSpec(on_A02, off_A02, scanTime(onMJD), scanTime(offMJD), Tsys02, weight, mitigCH) * sqrt(Rxy02)
-Ta03 <- TaCalSpec(on_A03, off_A03, scanTime(onMJD), scanTime(offMJD), Tsys03, weight, mitigCH) * sqrt(Rxy13)
+Ta00 <- TaCalSpec(on_A00, off_A00, scanTime(onMJD), scanTime(offMJD), Tsys00, weight, mitigCH) * sqrt(Rxy02)
+Ta01 <- TaCalSpec(on_A01, off_A01, scanTime(onMJD), scanTime(offMJD), Tsys01, weight, mitigCH) * sqrt(Rxy13)
+Ta02 <- TaCalSpec(on_A02, off_A02, scanTime(onMJD), scanTime(offMJD), Tsys02, weight, mitigCH) / sqrt(Rxy02)
+Ta03 <- TaCalSpec(on_A03, off_A03, scanTime(onMJD), scanTime(offMJD), Tsys03, weight, mitigCH) / sqrt(Rxy13)
 #
 #-------- Delay, phase, bandpass, and amplitude calibration for CrossCorr
 Tx02 <- TxCalSpec( 
