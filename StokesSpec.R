@@ -148,16 +148,34 @@ StokesU13 <- 0.5* (rowSums(Ta01* sn* weight1)/sum(weight1) - rowSums(Ta03* sn* w
 #lineRange <- c(0.1, 2.6, 2.8, 3.9)
 #chRange <- c( which(freq > lineRange[1] & freq < lineRange[2]), which(freq > lineRange[3] & freq < lineRange[4]))
 
+fshift <- function(AZEL, sqX, sqY, ofX, ofY, vg){
+    PA <- azel2pa(AZEL$AZ, AZEL$EL)
+    PAel <- PA - pi* AZEL$EL / 180.0
+    csPA <- cos(PA)
+    snPA <- sin(PA)
+    csPAel <- cos(PAel)
+    snPAel <- sin(PAel)
+    dRA <- -ofX*csPA + ofY* snPA - sqX*csPAel + sqY* snPAel
+    dEL <-  ofX*snPA + ofY* csPA + sqX*snPAel + sqY* csPAel
+    Fshift <- vg[1]* dRA + vg[2]* dEL
+    return(Fshift)
+}
+
 weight <- rep(0.0, length(freq)); weight[chRange] <- 1.0
 fitStokesI02 <- smooth.spline(freq, StokesI02, w=weight, all.knots=F, nknots=knotNum)
 fitStokesI13 <- smooth.spline(freq, StokesI13, w=weight, all.knots=F, nknots=knotNum)
+
+AZEL <- data.frame(AZ = AZ, EL = EL)
+FShift <- fshift(AZEL, args$OfX, args$OfY, args$SqX, args$SqY, VelocGradRADEC)
+
 for(scan_index in 1:length(Tsys00)){
-	csE <- cospi(EL[scan_index]/180.0); snE <- sinpi(EL[scan_index]/180.0)                                          # cos(EL) and sin(EL)
-	BeamSquintAzEl <- c(args$OfX + args$SqX * csE + args$SqY * snE,  args$OfY - args$SqX * snE + args$SqY * csE)    # Beam squint on the sky (az, el)
-    PA <- azel2pa(AZ[scan_index], EL[scan_index]); csB <- cos(PA); snB <- sin(PA)                                   # Rotation of beam squint on the sky (RA, DEC)
-    Fshift <- -VelocGradRADEC[1]* (csB* BeamSquintAzEl[1] + snB* BeamSquintAzEl[2]) - VelocGradRADEC[2]* (-snB* BeamSquintAzEl[1] + csB* BeamSquintAzEl[2]) # Vgrad dot Squint
-    cat(sprintf("Scan%d AZ=%5.1f EL=%5.1f PA=%5.1f Fshift=%5.1f Hz\n", scan_index, AZ[scan_index], EL[scan_index], PA, Fshift))
-    Fshift <- Fshift * 0.5e-6                                                                                       # Frequency Shift in MHz
+    #PA <- azel2pa(AZ[scan_index], EL[scan_index]); csPA <- cos(PA); snPA <- sin(PA)
+    #PAel <- PA + pi* EL[scan_index] / 180.0; csPAel <- cos(PAel); snPAel <- sin(PAel)
+    #squintRADEC <- c( -args$OfX*csPA + args$OfY* snPA - args$SqX*csPAel + args$SqY* snPAel, args$OfX*snPA + args$OfY* csPA + args$SqX*snPAel + args$SqY* csPAel )
+    #Fshift <- VelocGradRADEC %*% squintRADEC
+    #cat(sprintf("Scan%d AZ=%5.1f EL=%5.1f PA=%5.1f Fshift=%5.1f Hz\n", scan_index, AZ[scan_index], EL[scan_index], PA, Fshift))
+    cat(sprintf("Scan%d AZ=%5.1f EL=%5.1f PA=%5.1f Fshift=%5.1f Hz\n", scan_index, AZ[scan_index], EL[scan_index], azel2pa(AZ[scan_index], EL[scan_index]), FShift[scan_index]))
+    Fshift <- FShift[scan_index] * 0.5e-6                                                                                       # Frequency Shift in MHz
     fakeStokesV02 <- predict(fitStokesI02, (freq + Fshift))$y - predict(fitStokesI02, (freq - Fshift))$y            # Velocity gradient correction
     fakeStokesV13 <- predict(fitStokesI13, (freq + Fshift))$y - predict(fitStokesI13, (freq - Fshift))$y            # Velocity gradient correction
     Tx02[chRange,scan_index] = Tx02[chRange,scan_index] + 0.5i * fakeStokesV02[chRange]
