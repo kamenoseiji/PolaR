@@ -175,7 +175,7 @@ for(scan_index in 1:length(Tsys00)){
     #Fshift <- VelocGradRADEC %*% squintRADEC
     #cat(sprintf("Scan%d AZ=%5.1f EL=%5.1f PA=%5.1f Fshift=%5.1f Hz\n", scan_index, AZ[scan_index], EL[scan_index], PA, Fshift))
     cat(sprintf("Scan%d AZ=%5.1f EL=%5.1f PA=%5.1f Fshift=%5.1f Hz\n", scan_index, AZ[scan_index], EL[scan_index], azel2pa(AZ[scan_index], EL[scan_index]), FShift[scan_index]))
-    Fshift <- FShift[scan_index] * 0.5e-6                                                                                       # Frequency Shift in MHz
+    Fshift <- FShift[scan_index]                                                                                    # Frequency Shift in MHz
     fakeStokesV02 <- predict(fitStokesI02, (freq + Fshift))$y - predict(fitStokesI02, (freq - Fshift))$y            # Velocity gradient correction
     fakeStokesV13 <- predict(fitStokesI13, (freq + Fshift))$y - predict(fitStokesI13, (freq - Fshift))$y            # Velocity gradient correction
     Tx02[chRange,scan_index] = Tx02[chRange,scan_index] + 0.5i * fakeStokesV02[chRange]
