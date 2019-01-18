@@ -214,20 +214,20 @@ TxCalSpec <- function(OnXspec, OffXspec, OffSpec0, OffSpec1, mjdOn, mjdOff, Tsys
     return(TX)
 }
 #-------- BP Cal
-BPphsCal <- function( SPEC, BP ){
-    BPphs <- complex( modulus=1, argument=-Arg(BP))
-    return( SPEC* BPphs )
-}
+##BPphsCal <- function( SPEC, BP ){
+#    BPphs <- complex( modulus=1, argument=-Arg(BP))
+#    return( SPEC* BPphs )
+#}
 #-------- Function to Calibrate Delay and Phase
-DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
-    temp <- scanSpec
-    phase <- atan2(predict(ImFit, mjdSec)$y, predict(ReFit, mjdSec)$y)
-    delay <- predict(delayFit, mjdSec)$y
-    for(timeIndex in 1:ncol(scanSpec)){
-        scanSpec[,timeIndex] <- delayPhase_cal(temp[,timeIndex], delay[timeIndex], -phase[timeIndex])
-    }
-    return(scanSpec)
-}
+##DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
+#    temp <- scanSpec
+#    phase <- atan2(predict(ImFit, mjdSec)$y, predict(ReFit, mjdSec)$y)
+#    delay <- predict(delayFit, mjdSec)$y
+#    for(timeIndex in 1:ncol(scanSpec)){
+#        scanSpec[,timeIndex] <- delayPhase_cal(temp[,timeIndex], delay[timeIndex], -phase[timeIndex])
+#    }
+#    return(scanSpec)
+#}
 #-------- Spectral Mitigation
 SPmitigation <- function( spec, SPCH ){
     for(index in 1:length(SPCH)){
