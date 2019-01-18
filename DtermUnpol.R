@@ -36,11 +36,11 @@ if( length(WG$mjdSec) > 3 ){
     Re01Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis01), spar=0.25); Im01Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis01), spar=0.25)
 } else {
     WG <- data.frame(
-        mjdSec=c(min(WG$mjdSec)-10000, WG$mjdSec, max(WG$mjdSec)+10000),
-        delay00=rep(median(WG$delay00), length(WG$delay00)+2),
-        delay01=rep(median(WG$delay01), length(WG$delay01)+2),
-        Vis00=rep(median(WG$Vis00), length(WG$Vis00)+2),
-        Vis01=rep(median(WG$Vis01), length(WG$Vis01)+2))
+        mjdSec=c(min(WG$mjdSec)-100000, min(WG$mjdSec)-10000, mean(WG$mjdSec), max(WG$mjdSec)+10000, max(WG$mjdSec)+100000),
+        delay00=rep(mean(WG$delay00), 5),
+        delay01=rep(mean(WG$delay01), 5),
+        Vis00=rep(mean(WG$Vis00), 5),
+        Vis01=rep(mean(WG$Vis01), 5))
     delay00Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=WG$delay00))
     delay01Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=WG$delay01))
     Re00Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=Re(WG$Vis00)))
