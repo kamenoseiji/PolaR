@@ -17,8 +17,7 @@ if(class(Err) == "try-error"){ loadLocal( RPATH, FuncList ) }
 setwd('.')
 
 #-------- Procedures
-# args <- commandArgs(trailingOnly = T)
-args <- c('2017041134124.Thresh.Rdata', 'SAM45.Venus.cp805fn.proj1.20170210170826')
+args <- commandArgs(trailingOnly = T)
 
 prefix <- character(0)
 threshFile <- args[1]
