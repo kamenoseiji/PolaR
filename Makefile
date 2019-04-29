@@ -1,5 +1,5 @@
 #----------------- LIBRARY -------------------
-BINDIR = /usr/custom/bin
+BINDIR = /home/skameno/Programs/PolaR/
 #----------------- LINK OPTIONS -------------------
 CCOMPL=gcc $(CFLAGS)
 #------- Followings are PASS or DIRECTORY -------
