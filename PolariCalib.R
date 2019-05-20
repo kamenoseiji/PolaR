@@ -123,8 +123,10 @@ BPphsCal <- function( SPEC, BP ){
 #-------- Function to Calibrate Delay and Phase
 DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
 	temp <- scanSpec
-	phase <- atan2(as.numeric(predict(ImFit, data.frame(x=mjdSec))), as.numeric(predict(ReFit, data.frame(x=mjdSec))))
-	delay <- as.numeric(predict(delayFit, data.frame(x=mjdSec)))
+	#phase <- atan2(as.numeric(predict(ImFit, data.frame(x=mjdSec))$y), as.numeric(predict(ReFit, data.frame(x=mjdSec))$y))
+	phase <- atan2(predict(ImFit, mjdSec)$y, predict(ReFit, mjdSec)$y)
+	#delay <- as.numeric(predict(delayFit, data.frame(x=mjdSec)))
+	delay <- predict(delayFit, mjdSec)$y
 	for(timeIndex in 1:ncol(scanSpec)){
 		scanSpec[,timeIndex] <- delayPhase_cal(temp[,timeIndex], delay[timeIndex], -phase[timeIndex])
 	}
@@ -237,7 +239,11 @@ SPmitigation <- function( spec, SPCH ){
 }
 #-------- Smoothed Bandpass Calibration
 SBCspec <- function( spec, knotNum, weight, mitigCH){
-    return(predict(smooth.spline( SPmitigation(spec, mitigCH), w=weight, all.knots=F, nknots=knotNum), 1:length(spec))$y)
+    if( length(mitigCH) == 0){
+        return(predict(smooth.spline( spec, w=weight, all.knots=F, nknots=knotNum), 1:length(spec))$y)
+    } else {
+        return(predict(smooth.spline( SPmitigation(spec, mitigCH), w=weight, all.knots=F, nknots=knotNum), 1:length(spec))$y)
+    }
 }
 #-------- ScanTime
 scanTime   <- function(MJD_df){ return((MJD_df[[1]] + MJD_df[[2]])/2 ) }

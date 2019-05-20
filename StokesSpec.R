@@ -43,7 +43,7 @@ parseArg <- function( args ){
 }
 #-------- Load Spec and Scan data
 args <- parseArg(commandArgs(trailingOnly = T))
-#args <- parseArg(c('-S64','-b-2.04','-B-0.39','-o-0.41','-O-1.25','-v152','-V115','-p-180','-P180','-D2015107023131.Dterm.Rdata','2015107025048.Scan.Rdata','2015107025124.SPEC.Rdata','2015107021006.WG.Rdata','2015107021006.BP.Rdata'))
+#args <- parseArg(c('-S64', '-D2016023002950.Dcomb.Rdata', '-o2.04', '-O0.39', '-b0.41', '-B1.25', '-v0', '-V0', '-p-180', '-P180', '2016022232525.Scan.Rdata','2016022232602.SPEC.Rdata', '2016022225647.WG.Rdata', '2016022225647.BP.Rdata'))
 setwd('.')
 cat('Loading spectral data...\n')
 load(args$fileName[1])	 #Load Scan file
@@ -76,7 +76,8 @@ freq <- (0:(chNum-1))/chNum* 4.0	# MHz
 chSep <- 4.0 / chNum
 #mitigCH <- c(7256, 16385, 32769, 47522)
 #mitigCH <- c(16385)
-mitigCH <- c(23359, 32769)
+#mitigCH <- c(23359, 32769)
+mitigCH <- c(60424)
 flagCH <- unique(c(1, 2, 4, mitigCH))
 weight <- rep(1, chNum); weight[flagCH] <- 0.0
 # smoothWidth <- 512; knotNum <- floor(chNum / smoothWidth)
