@@ -84,9 +84,6 @@ smoothComplex <- function( spec, smoothCH ){
 	imSpec <- predict(smooth.spline( Im(spec), all.knots=F, nknots=as.integer(nspec/smoothCH)), 1:length(spec))$y
 	return(complex(real=reSpec, imaginary=imSpec))
 }
-
-
-
 #-------- Delay and phase determination using Wire-Grid scans
 wireGridPhaseCorr <- function(XY, ScanIndex, chRange=9:65544){
 	# XY is the cross power spectrum
@@ -123,9 +120,7 @@ BPphsCal <- function( SPEC, BP ){
 #-------- Function to Calibrate Delay and Phase
 DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
 	temp <- scanSpec
-	#phase <- atan2(as.numeric(predict(ImFit, data.frame(x=mjdSec))$y), as.numeric(predict(ReFit, data.frame(x=mjdSec))$y))
 	phase <- atan2(predict(ImFit, mjdSec)$y, predict(ReFit, mjdSec)$y)
-	#delay <- as.numeric(predict(delayFit, data.frame(x=mjdSec)))
 	delay <- predict(delayFit, mjdSec)$y
 	for(timeIndex in 1:ncol(scanSpec)){
 		scanSpec[,timeIndex] <- delayPhase_cal(temp[,timeIndex], delay[timeIndex], -phase[timeIndex])
