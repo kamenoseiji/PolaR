@@ -225,7 +225,10 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 	}
 	#-------- Covering PolariS Prefix
 	prefix_index <- c()
-	for(index in arrayIndex){prefix_index <- append(prefix_index, findPrefix(SAM45df$mjd_st[index], prefix))}
+	for(index in arrayIndex){
+        prefix_index <- append(prefix_index, findPrefix(SAM45df$mjd_st[index], prefix))
+        prefix_index <- append(prefix_index, findPrefix(SAM45df$mjd_ed[index], prefix))
+    }
 	prefix_index <- unique( prefix_index[prefix_index != -1] )
 	PolarisFileNum <- length(prefix_index)
 	#-------- MJD and Power in PolariS P file
