@@ -22,6 +22,7 @@ scanIntegT <- function(MJD_df){ return( MJD_df[[2]] - MJD_df[[2]] + 1) }
 
 #-------- Load Spec and Scan data
 args <- commandArgs(trailingOnly = T)
+#args <- c('2016106022536.Scan.Rdata', '2016106022608.SPEC.Rdata', '2016106013230.WG.Rdata', '2016106013230.BP.Rdata')
 setwd('.')
 load(args[1])	 #Load Scan file
 load(args[2])	 #Load SPEC file
