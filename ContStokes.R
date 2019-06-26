@@ -85,7 +85,7 @@ corr2Stokes <- function( XX, YY, XY, Dxy, pang ){
 
 
 #-------- Load Spec and Scan data
-# args <- commandArgs(trailingOnly = T)
+args <- commandArgs(trailingOnly = T)
 setwd('.')
 load(args[1])	 #Load Scan file
 load(args[2])	 #Load SPEC file
