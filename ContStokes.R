@@ -85,7 +85,7 @@ corr2Stokes <- function( XX, YY, XY, Dxy, pang ){
 
 
 #-------- Load Spec and Scan data
-args <- commandArgs(trailingOnly = T)
+# args <- commandArgs(trailingOnly = T)
 setwd('.')
 load(args[1])	 #Load Scan file
 load(args[2])	 #Load SPEC file
@@ -96,11 +96,14 @@ load(args[5])	 #Load BP file
 #-------- Smoothed Delay and Phase
 delayNum <- length(WG$mjdSec)
 if(delayNum < 5){
-    WG <- rbind( WG[1,], WG[1,], WG, WG[delayNum,], WG[delayNum,])
-    WG$mjdSec[1] <- WG$mjdSec[1] - 3600
-    WG$mjdSec[2] <- WG$mjdSec[2] - 1800
-    WG$mjdSec[delayNum + 1] <- WG$mjdSec[delayNum + 1] + 1800
-    WG$mjdSec[delayNum + 2] <- WG$mjdSec[delayNum + 2] + 3600
+    WG <- rbind( WG[1,], WG[1,], WG[1,], WG, WG[delayNum,], WG[delayNum,], WG[delayNum,])
+    delayNum <- length(WG$mjdSec)
+    WG$mjdSec[3] <- WG$mjdSec[1] - 1800
+    WG$mjdSec[2] <- WG$mjdSec[1] - 3600
+    WG$mjdSec[1] <- WG$mjdSec[1] - 5400
+    WG$mjdSec[delayNum -2] <- WG$mjdSec[delayNum] + 1800
+    WG$mjdSec[delayNum -1] <- WG$mjdSec[delayNum] + 3600
+    WG$mjdSec[delayNum] <- WG$mjdSec[delayNum] + 5400
 }
 delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25); delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.25)
 Re00Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis00), spar=0.25); Im00Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis00), spar=0.25)

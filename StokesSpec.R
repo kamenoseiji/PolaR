@@ -55,12 +55,16 @@ if(args$DtermFile != FALSE){ load(args$DtermFile)} else {D <- data.frame(XY02 = 
 #-------- Smoothed Delay and Phase
 cat('--- Delay and Phase Cal\n')
 delayNum <- length(WG$mjdSec)
+delayNum <- length(WG$mjdSec)
 if(delayNum < 5){
-    WG <- rbind( WG[1,], WG[1,], WG, WG[delayNum,], WG[delayNum,])
-    WG$mjdSec[1] <- WG$mjdSec[1] - 3600
-    WG$mjdSec[2] <- WG$mjdSec[2] - 1800
-    WG$mjdSec[delayNum + 1] <- WG$mjdSec[delayNum + 1] + 1800
-    WG$mjdSec[delayNum + 2] <- WG$mjdSec[delayNum + 2] + 3600
+    WG <- rbind( WG[1,], WG[1,], WG[1,], WG, WG[delayNum,], WG[delayNum,], WG[delayNum,])
+    delayNum <- length(WG$mjdSec)
+    WG$mjdSec[3] <- WG$mjdSec[1] - 1800
+    WG$mjdSec[2] <- WG$mjdSec[1] - 3600
+    WG$mjdSec[1] <- WG$mjdSec[1] - 5400
+    WG$mjdSec[delayNum -2] <- WG$mjdSec[delayNum] + 1800
+    WG$mjdSec[delayNum -1] <- WG$mjdSec[delayNum] + 3600
+    WG$mjdSec[delayNum] <- WG$mjdSec[delayNum] + 5400
 }
 delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25)
 delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.25)
