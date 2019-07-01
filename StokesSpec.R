@@ -42,8 +42,8 @@ parseArg <- function( args ){
     return( list(smoothWidth = smoothWidth, DtermFile = DtermFile, SqX = SqX, SqY = SqY, OfX = OfX, OfY = OfY, VgRA = VgRA, VgDEC = VgDEC, minPA = pi*minPA/180, maxPA = pi*maxPA/180, fileName = fileName) )
 }
 #-------- Load Spec and Scan data
-#args <- parseArg(commandArgs(trailingOnly = T))
-args <- parseArg(c('-S64', '-D2016106022608.Dcomb.Rdata', '-o2.04', '-O0.39', '-b0.41', '-B1.25', '-v41', '-V32', '-p-180', '-P180', '2016106023344.Scan.Rdata','2016106023419.SPEC.Rdata', '2016106013230.WG.Rdata', '2016106013230.BP.Rdata'))
+args <- parseArg(commandArgs(trailingOnly = T))
+#args <- parseArg(c('-S64', '-D2016106022608.Dcomb.Rdata', '-o2.04', '-O0.39', '-b0.41', '-B1.25', '-v41', '-V32', '-p-180', '-P180', '2016106023344.Scan.Rdata','2016106023419.SPEC.Rdata', '2016106013230.WG.Rdata', '2016106013230.BP.Rdata'))
 setwd('.')
 cat('Loading spectral data...\n')
 load(args$fileName[1])	 #Load Scan file
