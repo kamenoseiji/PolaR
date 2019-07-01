@@ -120,8 +120,16 @@ BPphsCal <- function( SPEC, BP ){
 #-------- Function to Calibrate Delay and Phase
 DelayPhaseCal <- function( scanSpec, mjdSec, delayFit, ReFit, ImFit){
 	temp <- scanSpec
-	phase <- atan2(predict(ImFit, data.frame(x=mjdSec)), predict(ReFit, data.frame(x=mjdSec)))
-	delay <- predict(delayFit, data.frame(x=mjdSec))
+    if(summary(ImFit)[[1]][1] == 'lm()'){
+	    phase <- atan2(as.numeric(predict(ImFit, data.frame(x=mjdSec))), as.numeric(predict(ReFit, data.frame(x=mjdSec))))
+    } else {
+	    phase <- atan2(predict(ImFit, x=mjdSec)$y, predict(ReFit, x=mjdSec)$y)
+    }
+    if(summary(delayFit)[[1]][1] == 'lm()'){
+	    delay <- as.numeric(predict(delayFit, data.frame(x=mjdSec)))
+    } else {
+	    delay <- predict(delayFit, x=mjdSec)$y
+    }
 	for(timeIndex in 1:ncol(scanSpec)){
 		scanSpec[,timeIndex] <- delayPhase_cal(temp[,timeIndex], delay[timeIndex], -phase[timeIndex])
 	}
