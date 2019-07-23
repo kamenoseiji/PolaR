@@ -288,25 +288,35 @@ Apower <- function(fname){
 	return( apply(A[chRange,], 2, mean))
 }
 #-------- Function to calculate Tsys from Scan Pattern
-scanTsys <- function(Scan, Tamb){
-    nameList <- names(Scan)
-    R_index <- which(Scan$scanType == 'R')
-    #-------- Median Window Filter
-    medR <- median( Scan$power00[R_index])
-    R_index <- which( abs( (Scan$power00 - medR)/medR ) < 0.02 )
-    #-------- On and Off scans
-    index <- which(Scan$scanType == 'OFF' | Scan$scanType == 'ON')
-    OutOfR_index <- which( Scan$mjdSec > max(Scan$mjdSec[R_index]))
+scanTsys <- function(ScanDF, Tamb){
+    nameList <- names(ScanDF)
     power_ptr <- grep('power', nameList); IFnum <- length(power_ptr)
-    for(IF_index in 1:IFnum){
-        IF_ID <- as.integer(strsplit(nameList[power_ptr[IF_index]], "power")[[1]][2])
-        Tsys   <- rep(NA, length(Scan$mjdSec))
-        RPower <- predict(smooth.spline(Scan$mjdSec[R_index], Scan[[power_ptr[IF_index]]][R_index], spar=1.0), Scan$mjdSec)$y
-        RPower[OutOfR_index] <- RPower[max(R_index)]
-        Tsys[index]  <- Tamb / (RPower[index] / Scan[[power_ptr[IF_index]]][index] - 1.0)
-        Scan <- cbind(Scan, Tsys)
-        nameList <- append(nameList, sprintf('Tsys%02d', IF_ID))
+    SAM45Files <- unique(ScanDF$FileName)
+    newNameList <- nameList
+    for(fileName in SAM45Files){
+        tmpScan <- ScanDF[ScanDF$FileName == fileName,]
+        tmpR_index <- which(tmpScan$scanType == 'R')
+        #-------- Median Window Filter
+        medR <- median( tmpScan$power00[tmpR_index]); sdR <- sd( tmpScan$power00[tmpR_index])
+        R_index <- which(abs(tmpScan$power00 - medR) < 3.0*sdR)
+        #-------- On and Off scans
+        index <- which(tmpScan$scanType == 'OFF' | tmpScan$scanType == 'ON')
+        OutOfR_index <- which( tmpScan$mjdSec > max(tmpScan$mjdSec[R_index]))
+        for(IF_index in 1:IFnum){
+            IF_ID <- as.integer(strsplit(nameList[power_ptr[IF_index]], "power")[[1]][2])
+            Tsys   <- rep(NA, length(tmpScan$mjdSec))
+            RPower <- predict(smooth.spline(tmpScan$mjdSec[R_index], tmpScan[[power_ptr[IF_index]]][R_index], spar=1.0), tmpScan$mjdSec)$y
+            RPower[OutOfR_index] <- RPower[max(R_index)]
+            Tsys[index]  <- Tamb / (RPower[index] / tmpScan[[power_ptr[IF_index]]][index] - 1.0)
+            if(fileName == SAM45Files[1]){ newNameList <- append(newNameList, sprintf('Tsys%02d', IF_ID))}
+            tmpScan <- cbind(tmpScan, Tsys)
+        }
+        names(tmpScan) <- newNameList
+        if( fileName == SAM45Files[1]){
+            resultDF <- tmpScan
+        } else {
+            resultDF <- rbind(resultDF, tmpScan)
+        }
     }
-    names(Scan) <- nameList
-    return(Scan)
+    return(resultDF)
 }

@@ -23,8 +23,8 @@ prefix <- character(0)
 threshFile <- args[1]
 SAM45File <- args[2:length(args)]
 
-#threshFile <- '2016050124748.Thresh.Rdata'
-#SAM45File <- c('SAM45.L1521B.as708fn.proj2.20160219173142')
+#threshFile <- '2017041134124.Thresh.Rdata'
+#SAM45File <- c('SAM45.Crbnbr.cp805fn.proj1.20170210184859','SAM45.Crbnbr.cp805fn.proj1.20170210201557')
 
 #-------- List prefix of PolariS data
 Year <- substr(strsplit(SAM45File[1], '\\.')[[1]][5], 1, 4)
@@ -45,6 +45,7 @@ Scan <- data.frame()
 for(fileIndex in 1:length(SAM45File)){
 	cat(sprintf('Processing %s ...\n', SAM45File[fileIndex]))
 	tempScan <- scanPattern(SAM45File[fileIndex], prefix, IF_ID, threshFile)
+    tempScan$scanDF$FileName <- SAM45File[fileIndex]
     Scan <- rbind(Scan, tempScan$scanDF)
 	# if(fileIndex == 1){	Scan <- tempScan$scanDF}
 	# else { Scan <- rbind(Scan, tempScan$scanDF)}
