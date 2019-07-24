@@ -206,26 +206,26 @@ scanPointing <- function(SAM45File){
 }
 #-------- Function to find Scan Pattern from SAM45 Log
 scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
-	load(threshFile)
-	SAM45Log <- readSAM45(SAM45File)
-	head1 <- SAM45Log[[1]]; head2 <- SAM45Log[[2]]; SAM45spec <- SAM45Log[[3]]; SAM45df <- SAM45Log[[4]]
-	arrayIndex <- which(SAM45df$cary_name == SAM45df$cary_name[1])
-	mjdRange <- min( SAM45df$mjd_st[arrayIndex] ):max( SAM45df$mjd_ed[arrayIndex] )
-	#-------- Scan Type
-	scanLen  <- length(mjdRange)
-	ScanType <- AZ <- EL <- dAZ <- dEL <- Vrad <- rep( NA, scanLen )
-	for(index in arrayIndex){
-		timeIndex <- which( mjdRange >= SAM45df$mjd_st[index] & mjdRange <= SAM45df$mjd_ed[index] )
-		ScanType[timeIndex] <- as.character(SAM45df$cscan_type[index])
-		AZ[timeIndex] <- SAM45df$AZ[index]
-		EL[timeIndex] <- SAM45df$EL[index]
-		dAZ[timeIndex] <- SAM45df$dAZ[index]
-		dEL[timeIndex] <- SAM45df$dEL[index]
-		Vrad[timeIndex] <- SAM45df$Vrad[index]
-	}
+    load(threshFile)
+    SAM45Log <- readSAM45(SAM45File)
+    head1 <- SAM45Log[[1]]; head2 <- SAM45Log[[2]]; SAM45spec <- SAM45Log[[3]]; SAM45df <- SAM45Log[[4]]
+    arrayIndex <- which(SAM45df$cary_name == SAM45df$cary_name[1])
+    mjdRange <- min( SAM45df$mjd_st[arrayIndex] ):max( SAM45df$mjd_ed[arrayIndex] )
+    #-------- Scan Type
+    scanLen  <- length(mjdRange)
+    ScanType <- AZ <- EL <- dAZ <- dEL <- Vrad <- rep( NA, scanLen )
+    for(index in arrayIndex){
+        timeIndex <- which( mjdRange >= SAM45df$mjd_st[index] & mjdRange <= SAM45df$mjd_ed[index] )
+        ScanType[timeIndex] <- as.character(SAM45df$cscan_type[index])
+        AZ[timeIndex] <- SAM45df$AZ[index]
+        EL[timeIndex] <- SAM45df$EL[index]
+        dAZ[timeIndex] <- SAM45df$dAZ[index]
+        dEL[timeIndex] <- SAM45df$dEL[index]
+        Vrad[timeIndex] <- SAM45df$Vrad[index]
+    }
 	#-------- Covering PolariS Prefix
-	prefix_index <- c()
-	for(index in arrayIndex){
+    prefix_index <- c()
+    for(index in arrayIndex){
         prefix_index <- append(prefix_index, findPrefix(SAM45df$mjd_st[index], prefix))
         prefix_index <- append(prefix_index, findPrefix(SAM45df$mjd_ed[index], prefix))
     }
@@ -244,7 +244,11 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 	mjdSecPolaris <- append(mjdSecPolaris, prefix2MJDsec(prefix[prefix_index[1]]) + seq(0, length(powerIF[[1]])-1, by=1))
 	#-------- Matching between SAM45 and PolariS
 	match_index <- rep(NA, scanLen)
-	for( index in 1:scanLen){ match_index[index] <- which(mjdSecPolaris > (mjdRange[index] - 1.5) & mjdSecPolaris <= (mjdRange[index] - 0.5)) }
+	for( index in 1:scanLen){
+        if( min(mjdSecPolaris) > mjdRange[index] - 1.5){ next }
+        if( max(mjdSecPolaris) < mjdRange[index] - 0.5){ next }
+        match_index[index] <- which(mjdSecPolaris > (mjdRange[index] - 1.5) & mjdSecPolaris <= (mjdRange[index] - 0.5))
+    }
 	#-------- Pack into a data frame
 	scanDF <- data.frame(mjdRange, ScanType, AZ, EL, dAZ, dEL, Vrad); DF_label <- c('mjdSec', 'scanType', 'AZ', 'EL', 'dAZ', 'dEL', 'Vrad')
 	for(IF_index in 1:length(IF_ID)){
