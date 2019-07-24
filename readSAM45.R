@@ -258,7 +258,6 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
 	names(scanDF) <- DF_label
 	return( list(scanDF=scanDF, head1=head1, head2=head2, SAM45spec=SAM45spec) )
 }
-
 #-------- 
 bunchVec16 <- function(vec){ return(bunch_vec(vec, 16)) }
 

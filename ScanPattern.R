@@ -23,8 +23,8 @@ prefix <- character(0)
 threshFile <- args[1]
 SAM45File <- args[2:length(args)]
 
-#threshFile <- '2017041134124.Thresh.Rdata'
-#SAM45File <- c('SAM45.Venus.cp805fn.proj1.20170210170826')
+threshFile <- '2017041134124.Thresh.Rdata'
+SAM45File <- c('SAM45.Venus.cp805fn.proj1.20170210170826')
 
 #-------- List prefix of PolariS data
 Year <- substr(strsplit(SAM45File[1], '\\.')[[1]][5], 1, 4)
