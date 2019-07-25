@@ -215,7 +215,8 @@ scanPattern <- function(SAM45File, prefix, IF_ID, threshFile){
     scanLen  <- length(mjdRange)
     ScanType <- AZ <- EL <- dAZ <- dEL <- Vrad <- rep( NA, scanLen )
     for(index in arrayIndex){
-        timeIndex <- which( mjdRange >= SAM45df$mjd_st[index] & mjdRange <= SAM45df$mjd_ed[index] )
+        # timeIndex <- which( mjdRange >= SAM45df$mjd_st[index] & mjdRange <= SAM45df$mjd_ed[index] )
+        timeIndex <- which( mjdRange >= SAM45df$mjd_st[index] + 0.5 & mjdRange <= SAM45df$mjd_ed[index] )
         ScanType[timeIndex] <- as.character(SAM45df$cscan_type[index])
         AZ[timeIndex] <- SAM45df$AZ[index]
         EL[timeIndex] <- SAM45df$EL[index]
