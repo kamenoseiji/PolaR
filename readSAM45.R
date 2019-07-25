@@ -305,12 +305,12 @@ scanTsys <- function(ScanDF, Tamb){
         R_index <- which(abs(tmpScan$power00 - medR) < 3.0*sdR)
         #-------- On and Off scans
         index <- which(tmpScan$scanType == 'OFF' | tmpScan$scanType == 'ON')
-        OutOfR_index <- which( tmpScan$mjdSec > max(tmpScan$mjdSec[R_index]))
+        #OutOfR_index <- which( tmpScan$mjdSec > max(tmpScan$mjdSec[R_index]))
         for(IF_index in 1:IFnum){
             IF_ID <- as.integer(strsplit(nameList[power_ptr[IF_index]], "power")[[1]][2])
             Tsys   <- rep(NA, length(tmpScan$mjdSec))
-            RPower <- predict(smooth.spline(tmpScan$mjdSec[R_index], tmpScan[[power_ptr[IF_index]]][R_index], spar=1.0), tmpScan$mjdSec)$y
-            RPower[OutOfR_index] <- RPower[max(R_index)]
+            RPower <- predict(smooth.spline(tmpScan$mjdSec[R_index], tmpScan[[power_ptr[IF_index]]][R_index], spar=1.5), tmpScan$mjdSec)$y
+            #RPower[OutOfR_index] <- RPower[max(R_index)]
             Tsys[index]  <- Tamb / (RPower[index] / tmpScan[[power_ptr[IF_index]]][index] - 1.0)
             if(fileName == SAM45Files[1]){ newNameList <- append(newNameList, sprintf('Tsys%02d', IF_ID))}
             tmpScan <- cbind(tmpScan, Tsys)
