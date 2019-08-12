@@ -22,7 +22,7 @@ scanIntegT <- function(MJD_df){ return( MJD_df[[2]] - MJD_df[[2]] + 1) }
 
 #-------- Load Spec and Scan data
 args <- commandArgs(trailingOnly = T)
-#args <- c('2016106022536.Scan.Rdata', '2016106022608.SPEC.Rdata', '2016106013230.WG.Rdata', '2016106013230.BP.Rdata')
+#args <- c('2016107011134.Scan.Rdata', '2016107011206.SPEC.Rdata', '2016107005226.WG.Rdata', '2016107005226.BP.Rdata')
 setwd('.')
 load(args[1])	 #Load Scan file
 load(args[2])	 #Load SPEC file
@@ -31,17 +31,18 @@ load(args[4])	 #Load BP file
 
 #
 #-------- Smoothed Delay and Phase
-if( length(WG$mjdSec) > 3 ){
+delayNum <- length(WG$mjdSec)
+if( delayNum > 3 ){
     delay00Fit <- smooth.spline(WG$mjdSec, WG$delay00, spar=0.25); delay01Fit <- smooth.spline(WG$mjdSec, WG$delay01, spar=0.25)
     Re00Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis00), spar=0.25); Im00Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis00), spar=0.25)
     Re01Fit <- smooth.spline(WG$mjdSec, Re(WG$Vis01), spar=0.25); Im01Fit <- smooth.spline(WG$mjdSec, Im(WG$Vis01), spar=0.25)
 } else {
     WG <- data.frame(
-        mjdSec=c(min(WG$mjdSec)-100000, min(WG$mjdSec)-10000, mean(WG$mjdSec), max(WG$mjdSec)+10000, max(WG$mjdSec)+100000),
-        delay00=rep(mean(WG$delay00), 5),
-        delay01=rep(mean(WG$delay01), 5),
-        Vis00=rep(mean(WG$Vis00), 5),
-        Vis01=rep(mean(WG$Vis01), 5))
+        mjdSec=c(min(WG$mjdSec)-100000, min(WG$mjdSec)-10000, WG$mjdSec, max(WG$mjdSec)+10000, max(WG$mjdSec)+100000),
+        delay00=c(rep(WG$delay00[1], 2), WG$delay00, rep(WG$delay00[delayNum], 2)),
+        delay01=c(rep(WG$delay01[1], 2), WG$delay01, rep(WG$delay01[delayNum], 2)),
+        Vis00=c(rep(WG$Vis00[1], 2), WG$Vis00, rep(WG$Vis00[delayNum], 2)),
+        Vis01=c(rep(WG$Vis01[1], 2), WG$Vis01, rep(WG$Vis01[delayNum], 2)))
     delay00Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=WG$delay00))
     delay01Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=WG$delay01))
     Re00Fit <- lm(formula = y ~ x, data.frame(x=WG$mjdSec, y=Re(WG$Vis00)))
