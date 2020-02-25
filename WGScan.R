@@ -2,6 +2,19 @@
 # usage: Rscript WGScan.R [list of prefix]
 # prefix is YYYYDOYHHMMSS in the PolariS file name (e.g. 2013362105803)
 #
+
+parseArg <- function( args ){
+    argNum <- length(args)
+    startMJD <- 0
+    endMJD   <- 6e9
+    for( index in 1:argNum ){
+        if(substr(args[index], 1,2) == "-s"){ startMJD <- prefix2MJDsec(substring(args[index], 3))}
+        if(substr(args[index], 1,2) == "-e"){ endMJD   <- prefix2MJDsec(substring(args[index], 3))}
+    }
+    fileName <- args[argNum]
+    return( list(startMJD=startMJD, endMJD=endMJD) )
+}
+
 RPATH <- '~/Programs/PolaR'
 FuncList <- c('readPolariS', 'date', 'plotTool')
 source(sprintf('%s/loadModule.R', RPATH))
