@@ -38,11 +38,11 @@ dev.off()
 #-------- Velocity Gradient for V1
 DF <- data.frame( x=Pl, y=Pm, z=V1, w=1.0/E1^2)
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Component 1: Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x'], coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
+text_sd <- sprintf('Component 1: Velocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x'], coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 cat(text_sd); cat('\n')
 
 #-------- Velocity Gradient for V2
 DF <- data.frame( x=Pl, y=Pm, z=V2, w=1.0/E2^2)
 fit <- lm(formula = z ~ x + y, data=DF, weights = w)
-text_sd <- sprintf('Component 2: Verocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x'], coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
+text_sd <- sprintf('Component 2: Velocity Gradient = %5.2f %5.2f (%.1f %.1f) km/s/deg', coef(fit)['x'], coef(fit)['y'], summary(fit)$coefficient[2,2], summary(fit)$coefficient[3,2])
 cat(text_sd); cat('\n')
